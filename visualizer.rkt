@@ -16,19 +16,24 @@
 (define SONG-LOCATION1 "songs/Derezzed.wav")
 (define SONG-LOCATION2 "songs/The Intro.wav")
 (define SONG-LOCATION3 "songs/rct2theme.wav")
-
+(define SONG-LOCATION4 "songs/Looking Glass.wav")
+(define SONG-LOCATION5 "songs/Luv Sick.wav")
 
 (define SONG1 (rs-read/clip SONG-LOCATION1 0 (rs-frames (rs-read SONG-LOCATION1)))) ;(* 44100 30)))
 (define SONG2 (rs-read/clip SONG-LOCATION2 0 (rs-frames (rs-read SONG-LOCATION2))))
 (define SONG3 (rs-read/clip SONG-LOCATION3 0 (rs-frames (rs-read SONG-LOCATION3))))
+(define SONG4 (rs-read/clip SONG-LOCATION4 0 (rs-frames (rs-read SONG-LOCATION4))))
+(define SONG5 (rs-read/clip SONG-LOCATION5 0 (rs-frames (rs-read SONG-LOCATION5))))
 
 
 (define SONGLEN1 (rs-frames SONG1))
 (define SONGLEN2 (rs-frames SONG2))
 (define SONGLEN3 (rs-frames SONG3))
+(define SONGLEN4 (rs-frames SONG4))
+(define SONGLEN5 (rs-frames SONG5))
 
-(define SONG-LIST  (list SONG1 SONG2 SONG3))
-(define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3))
+(define SONG-LIST  (list SONG1 SONG2 SONG3 SONG4 SONG5))
+(define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3 SONG-LOCATION4 SONG-LOCATION5))
 
 (define-struct world[t a c1now c1go slide-h drag? scene volume p cs cs-name])
 ;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound String)
