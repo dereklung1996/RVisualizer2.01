@@ -28,14 +28,11 @@
 (define SONGLEN3 (rs-frames SONG3))
 
 (define SONG-LIST  (list SONG1 SONG2 SONG3))
-(define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3))
 
-(define-struct world[t a c1now c1go slide-h drag? scene volume p cs cs-name])
-;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound String)
+(define-struct world[t a c1now c1go slide-h drag? scene volume p cs])
+;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound)
 
-
-
-(define INITIAL-WORLD (make-world 0 0 300 300 900 false 0 1 0 SONG1 SONG-LOCATION1))
+(define INITIAL-WORLD (make-world 0 0 300 300 900 false 0 1 0 SONG1))
 (define volume-song (box (world-volume INITIAL-WORLD)))
 (define ctr (box 5))
 (define play-speed (box (world-p INITIAL-WORLD)))
@@ -69,7 +66,7 @@
           [out = (begin
                    (set-box! cur-frame ctr)
                    (* (unbox volume-song) ; volume
-                      (rs-ith/left (unbox cur-song) ctr)))]  
+                      (rs-ith/left (unbox cur-song) ctr)))]
           ))
 
 ;; CREATES VISUALS
@@ -83,11 +80,11 @@
         (set-box! ctr 3)
         )
     (if (= (unbox ctr) 0)
-        (make-world (world-t w) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame)))) 
-                    (world-slide-h w) (world-drag? w)(world-scene w)(world-volume w)(world-p w) (world-cs w)(world-cs-name w))
+        (make-world (world-t w) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
+                    (world-slide-h w) (world-drag? w)(world-scene w)(world-volume w)(world-p w) SONG1)
         
         (make-world (world-t w) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
-                    (world-slide-h w) (world-drag? w) (world-scene w)(world-volume w)(world-p w) (world-cs w)(world-cs-name w))
+                    (world-slide-h w) (world-drag? w) (world-scene w)(world-volume w)(world-p w) SONG1)
         )))
 
 ;; DRAWS SOME IMAGES
@@ -105,16 +102,15 @@
    (text "previous" 12 "white")
    30 10
    (rectangle 60 20 "solid" "purple")))
-(define (NOWPLAYING w)
+(define NOWPLAYING 
   (place-image
    (text 
     (string-append 
-     "Now Playing: " (substring (world-cs-name w) 6 (- (string-length (world-cs-name w)) 3))) 
-    15 "white")
-   150 20
-   (rectangle 300 40 "solid" "black"))) 
+     "Now Playing: " (substring SONG-LOCATION1 6 (- (string-length SONG-LOCATION1) 3)))
+     15 "white")
+    150 20
+    (rectangle 300 40 "solid" "black")))
 
-;; draws some background colors and adds some debugging information.
 (define (draw-visuals w) 
   (overlay
    (above/align "left"
@@ -133,128 +129,105 @@
    ;(circle (world-c1now w) "solid" "red")
    ))
 
-;; Creates Song Position Slider
-(define (draw-song-slider w)
-  (place-image
-   (circle 7 "solid" "green")
-   (/ 1000 (+ 1 (unbox cur-frame))) 6
-   (rectangle 1000 12 "solid" "red")
-   ))
-
 
 ;; Draws the scene
 ;; world -> world 
 (define (draw w)
   (cond
-    ;; Menu Screen
+    
     [(= (world-scene w) 0)
      (place-image STRT-BUTTON 600 350
                   (place-image AWESOME-BUTTON 600 450
                                (place-image R-LOGO 600 200
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
-    ;; Play Screen 1
     [(= (world-scene w) 1) 
      (place-image
       (circle (world-c1now w) "solid" "red")
       600 320
       (place-image
-       (draw-song-slider w)
-       600 550
+       (square 20 "solid" "green")
+       (world-slide-h w) 650
        (place-image
-        (square 20 "solid" "green")
-        (world-slide-h w) 650
+        (rectangle 1100 500 "outline" "black")
+        600 320
         (place-image
-         (rectangle 1100 500 "outline" "black")
-         600 320
+         (square 50 "solid" "green")
+         100 650
          (place-image
-          (square 50 "solid" "green")
-          100 650
+          (square 50 "solid" "red")
+          200 650
           (place-image
-           (square 50 "solid" "red")
-           200 650
+           (rectangle 500 20 "outline" "black")
+           900 650
            (place-image
-            (rectangle 500 20 "outline" "black")
-            900 650
+            (rectangle 30 20 "solid" "hotpink")
+            40 30
             (place-image
-             (rectangle 30 20 "solid" "hotpink")
-             40 30
+             NXT-SNG
+             450 650
              (place-image
-              NXT-SNG
-              450 650
+              PREV-SNG
+              350 650
               (place-image
-               PREV-SNG
-               350 650
+               (rectangle 50 20 "outline" "black")
+               75 60
                (place-image
                 (rectangle 50 20 "outline" "black")
-                75 60
+                125 60
                 (place-image
-                 (rectangle 50 20 "outline" "black")
-                 125 60
+                 (draw-visuals w)
+                 600 310
                  (place-image
-                  (draw-visuals w)
-                  600 310
-                  (place-image
-                   (NOWPLAYING w)
-                   600 500
-                   
-                   (empty-scene 1200 720)))))))))))))))] 
+                  NOWPLAYING
+                  600 500
+                  (empty-scene 1200 720))))))))))))))]
     
-    ;; Secret Scene
     [(= (world-scene w) 2)
-     (place-image 
-      (circle 4 "outline" "red")
-      600 360
-      (empty-scene 1200 720))]
+     (place-image (bitmap/file "img/emosewa.gif")
+                  600 360
+                  
+                  (empty-scene 1200 720))]
     
-    ;; Playing Scene 2
     [(= (world-scene w) 3)
      (place-image
       (triangle (world-c1now w) "solid" "green")
       600 320
       (place-image
-       (draw-song-slider w)
-       600 600
+       (square 20 "solid" "green")
+       (world-slide-h w) 650
        (place-image
-        (square 20 "solid" "green")
-        (world-slide-h w) 650
+        (rectangle 1100 500 "outline" "black")
+        600 320
         (place-image
-         (rectangle 1100 500 "outline" "black")
-         600 320
+         (square 50 "solid" "green")
+         100 650
          (place-image
-          (square 50 "solid" "green")
-          100 650
+          (square 50 "solid" "red")
+          200 650
           (place-image
-           (square 50 "solid" "red")
-           200 650
+           (rectangle 500 20 "outline" "black")
+           900 650
            (place-image
-            (rectangle 500 20 "outline" "black")
-            900 650
+            (rectangle 30 20 "solid" "hotpink")
+            40 30
             (place-image
-             (rectangle 30 20 "solid" "hotpink")
-             40 30
+             NXT-SNG
+             450 650
              (place-image
-              NXT-SNG
-              450 650
+              PREV-SNG
+              350 650 
               (place-image
-               PREV-SNG
-               350 650 
+               (rectangle 50 20 "outline" "black")
+               75 60
                (place-image
                 (rectangle 50 20 "outline" "black")
-                75 60
+                125 60
                 (place-image
-                 (rectangle 50 20 "outline" "black")
-                 125 60
-                 (place-image
-                  (draw-visuals w)
-                  600 310
-                  (place-image
-                   (NOWPLAYING w)
-                   600 500
-                   
-                   (empty-scene 1200 720)))))))))))))))])) 
-
-
+                 (draw-visuals w)
+                 600 310
+                 (empty-scene 1200 720)))))))))))))] 
+    )) 
 ;bounds of buttons on menu screen
 (define X_BOUNDARY1 500)
 (define X_BOUNDARY2 700)
@@ -297,7 +270,7 @@
 ;; current song, song list -> next song
 (define (next-song song-list cs)
   (cond
-    [(rs-equal? cs (first song-list)) 
+    [(rs-equal? cs (first song-list))
      (cond
        [(empty? (rest song-list)) (first SONG-LIST)]
        [else (first (rest song-list))])]    
@@ -312,28 +285,7 @@
     [(rs-equal? cs (first song-list)) (first (reverse SONG-LIST))]
     [else (prev-song (rest song-list) cs)]))
 
-;; functions for changing the name of the song
 
-;; next song-name selector
-;; current song, song list -> next song
-(define (next-song-name song-list cs-name) 
-  (cond
-    [(string=? cs-name (first song-list))
-     (cond
-       [(empty? (rest song-list)) (first SONG-NAME-LIST)]
-       [else (first (rest song-list))])]    
-    [else (next-song-name (rest song-list) cs-name)]))
-
-;; previous song-name selector
-;; current song, song list -> previous song
-(define (prev-song-name song-list cs-name)
-  (cond
-    ;[(empty? (rest song-list)) (first (rest (reverse song-list)))]
-    [(string=? cs-name (first (rest song-list))) (first song-list)]
-    [(string=? cs-name (first song-list)) (first (reverse SONG-NAME-LIST))]
-    [else (prev-song-name (rest song-list) cs-name)]))
-
-;; Mouse Events
 ;; World X-coord Y-coord Mouse-Event -> World 
 (define (mouse-event w x y event)
   (cond
@@ -346,58 +298,49 @@
           (async-channel-put events true)
           (set-box! cur-song (prev-song SONG-LIST (world-cs w)))
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 
-                      (world-scene w) (world-volume w)(world-p w)
-                      (prev-song SONG-LIST (world-cs w)) (prev-song-name SONG-NAME-LIST (world-cs-name w))))]  
+                      (world-scene w) (world-volume w)(world-p w) SONG1))]
        ;; next song
-       [(and (> y y-b) (< y y-t) (> x next-x-l) (< x next-x-r)(not (= (world-scene w) 0))) 
+       [(and (> y y-b) (< y y-t) (> x next-x-l) (< x next-x-r)(not (= (world-scene w) 0)))
         (begin 
-          (async-channel-put events true) 
+          (async-channel-put events true)
           (set-box! cur-song (next-song SONG-LIST (world-cs w)))  
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 
-                      (world-scene w) (world-volume w)(world-p w) 
-                      (next-song SONG-LIST (world-cs w)) (next-song-name SONG-NAME-LIST (world-cs-name w))))]
+                      (world-scene w) (world-volume w)(world-p w) SONG2))]
        ;; Menu Buttons
        ;; Music Player Button
        [(and (> y Y_BOUNDARY1) (< y Y_BOUNDARY2) (> x X_BOUNDARY1) (< x X_BOUNDARY2) (= 0 (world-scene w))) 
-        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  1 (world-volume w)(world-p w) (world-cs w)
-                    (world-cs-name w))]
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)   1 (world-volume w)(world-p w) 1)]
        ;; Place holder
        [(and (> y Y_BOUNDARY3) (< y Y_BOUNDARY4) (> x X_BOUNDARY3) (< x X_BOUNDARY4))
-        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  2 (world-volume w)(world-p w) (world-cs w)
-                    (world-cs-name w))]
-       ;; Play Screen Buttons
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  2 (world-volume w)(world-p w) 1)]
        ;; Returns to Menu
        [(and (> y Y_BOUNDARY5) (< y Y_BOUNDARY6) (> x X_BOUNDARY5) (< x X_BOUNDARY6) (not (= 0 (world-scene w)))) 
         (begin 
           (set-box! play-speed 0) 
-          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  0 (world-volume w) 0 (world-cs w)
-                      (world-cs-name w)))] 
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  0 (world-volume w) 0 1))] 
        ;; Goes to screen 1
        [(and (> y Y_BOUNDARY7) (< y Y_BOUNDARY8) (> x X_BOUNDARY7) (< x X_BOUNDARY8) (not (= 0 (world-scene w)))(not(= 1 (world-scene w)))) 
-        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  1 (world-volume w)(world-p w) (world-cs w)
-                    (world-cs-name w))]
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  1 (world-volume w)(world-p w) 1)]
        ;; Goes to screen 3 which is the same as 1 but different visuals
        [(and (> y Y_BOUNDARY9) (< y Y_BOUNDARY10) (> x X_BOUNDARY9) (< x X_BOUNDARY10) (not (= 0 (world-scene w)))(not (= 3 (world-scene w))))
-        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  3 (world-volume w)(world-p w) (world-cs w)
-                    (world-cs-name w))]
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  3 (world-volume w)(world-p w) 1)]
        
-       ;;pause
+       ;;stops pstream
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
         (begin 
           (set-box! play-speed 0)
-          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w) (world-volume w) 0 (world-cs w)
-                      (world-cs-name w)))]
-       ;;plays  
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w) (world-volume w) 0 1)
+          
+          )]
+       ;;play pstream  
        [(and (> x (- 100 25)) (< x (+ 100 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
         (begin
           (set-box! play-speed 1)
-          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w)(world-volume w) 1 (world-cs w)
-                      (world-cs-name w)))] 
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w)(world-volume w) 1 1))] 
        [else w])]
     ;; makes drag? false when button is not held down
     [(mouse=? event "button-up")
-     (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) false (world-scene w)(world-volume w)(world-p w) (world-cs w)
-                 (world-cs-name w))
+     (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) false (world-scene w)(world-volume w)(world-p w) 1)
      ] 
     [(mouse=? event "drag")
      (cond
@@ -409,25 +352,24 @@
                        (begin 
                          (set-box! volume-song (/ (- (world-slide-h w) 660) 480))
                          (/ (- (world-slide-h w) 660) 480))
-                       (world-p w) (world-cs w)
-                       (world-cs-name w)) 
+                       (world-p w) 1) 
            ]
           [else 
-           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) true (world-scene w)(world-volume w)(world-p w) (world-cs w)
-                       (world-cs-name w))]
+           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) true (world-scene w)(world-volume w)(world-p w) 1)]
           )]
        ;; When mouse is within the boundaries of a slider, then drag? is true
        [else 
         (cond
           [(and (> x (- 910 250)) (< x (+ 890 250))(> y (- 650 20)) (< y (+ 650 20)) (not (= (world-scene w) 0)))
            (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w)
-                       x true (world-scene w)(world-volume w)(world-p w) (world-cs w)
-                       (world-cs-name w))]
+                       x true (world-scene w)(world-volume w)(world-p w) 1)]
           [else w])])
      ]
-    [else w]))
+    [else w]) 
+  )
 
-(big-bang INITIAL-WORLD 
+
+(big-bang INITIAL-WORLD
           [on-tick tock 1/60]
           [to-draw draw]
           [on-mouse mouse-event]
