@@ -38,7 +38,6 @@
 (define play-speed (box (world-p INITIAL-WORLD)))
 (define cur-frame (box 1))
 (define cur-song (box (world-cs INITIAL-WORLD)))
-(define time-ticks (box 0))
 
 ;; this channel will hold the events flowing from the big-bang side
 (define events (make-async-channel))
@@ -76,7 +75,6 @@
 ;; and use it create the radius of our visuals
 (define (tock w)
   (begin
-    (set-box! time-ticks (add1 (unbox time-ticks)))
     (if (> (unbox ctr) 0)
         (set-box! ctr (sub1 (unbox ctr)))
         (set-box! ctr 3)
@@ -145,10 +143,7 @@
                                                          (empty-scene 1200 720)))))]
     [(= (world-scene w) 1) 
      (place-image
-      (star (world-c1now w) "solid" (make-color 255 (modulo (* 10 (unbox time-ticks)) 255) 255))
-      600 320
-      (place-image
-       (star (* (world-c1now w) 1.5) "solid" (make-color (modulo (* 10(unbox time-ticks)) 255) 255 255))
+      (circle (world-c1now w) "solid" "red")
       600 320
       (place-image
        (square 20 "solid" "green")
@@ -186,7 +181,7 @@
                  (place-image
                   NOWPLAYING
                   600 500
-                  (empty-scene 1200 720)))))))))))))))]
+                  (empty-scene 1200 720))))))))))))))]
     
     [(= (world-scene w) 2)
      (place-image (bitmap/file "img/emosewa.gif")
