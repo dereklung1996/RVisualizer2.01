@@ -59,7 +59,7 @@
                  ;; no, no event:
                  [else ctr]))]
         ;; not time to check yet:
-        [else ctr]))
+        [else ctr])) 
 
 (signal-play 
  (network ()
@@ -76,7 +76,7 @@
 ;; and use it create the radius of our visuals
 (define (tock w)
   (begin
-    (set-box! time-ticks (add1 (unbox time-ticks)))
+    (if (= (unbox time-ticks) 255)(set-box! time-ticks 0)(set-box! time-ticks (add1 (unbox time-ticks))))
     (if (> (unbox ctr) 0)
         (set-box! ctr (sub1 (unbox ctr)))
         (set-box! ctr 3)
@@ -109,9 +109,9 @@
    (text 
     (string-append 
      "Now Playing: " (substring SONG-LOCATION1 6 (- (string-length SONG-LOCATION1) 3)))
-     15 "white")
-    150 20
-    (rectangle 300 40 "solid" "black")))
+    15 "white")
+   150 20
+   (rectangle 300 40 "solid" "black")))
 
 (define (draw-visuals w) 
   (overlay
@@ -127,12 +127,13 @@
    (above
     (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
     (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
+    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "black")
     )
-   ;(circle (world-c1now w) "solid" "red")
+   ;(circle (world-c1now w) "solid" "red") 
    ))
 
 
-;; Draws the scene
+;; Draws the scene 
 ;; world -> world 
 (define (draw w)
   (cond
@@ -143,96 +144,301 @@
                                (place-image R-LOGO 600 200
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
-    [(= (world-scene w) 1) 
+    [(= (world-scene w) 1)
      (place-image
-      (star (world-c1now w) "solid" (make-color 255 (modulo (* 10 (unbox time-ticks)) 255) 255))
+      (star (world-c1now w) "solid" 
+            (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
+                        (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
+                        (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
       600 320
       (place-image
-       (star (* (world-c1now w) 1.5) "solid" (make-color (modulo (* 10(unbox time-ticks)) 255) 255 255))
-      600 320
-      (place-image
-       (square 20 "solid" "green")
-       (world-slide-h w) 650
+       (star (* (world-c1now w) 1.5) "solid" 
+             (make-color 150 0 150)) 
+       600 320
        (place-image
-        (rectangle 1100 500 "outline" "black")
-        600 320
+        (square 20 "solid" "green")
+        (world-slide-h w) 650
         (place-image
-         (square 50 "solid" "green")
-         100 650
+         (rectangle 1100 500 "outline" "black")
+         600 320
          (place-image
-          (square 50 "solid" "red")
-          200 650
+          (square 50 "solid" "green")
+          100 650
           (place-image
-           (rectangle 500 20 "outline" "black")
-           900 650
+           (square 50 "solid" "red")
+           200 650 
            (place-image
-            (rectangle 30 20 "solid" "hotpink")
-            40 30
+            (rectangle 500 20 "outline" "black")
+            900 650
             (place-image
-             NXT-SNG
-             450 650
+             (rectangle 30 20 "solid" "hotpink")
+             40 30
              (place-image
-              PREV-SNG
-              350 650
+              NXT-SNG
+              450 650
               (place-image
-               (rectangle 50 20 "outline" "black")
-               75 60
+               PREV-SNG
+               350 650
                (place-image
                 (rectangle 50 20 "outline" "black")
-                125 60
+                75 60
                 (place-image
-                 (draw-visuals w)
-                 600 310
+                 (rectangle 50 20 "outline" "black")
+                 125 60
                  (place-image
-                  NOWPLAYING
-                  600 500
-                  (empty-scene 1200 720)))))))))))))))]
+                  (rectangle 50 20 "outline" "black")
+                  175 60
+                  (place-image
+                   (rectangle 50 20 "outline" "black")
+                   225 60
+                   (place-image
+                    (draw-visuals w)
+                    600 310
+                    (place-image
+                     NOWPLAYING
+                     600 500
+                     (empty-scene 1200 720)))))))))))))))))]
     
     [(= (world-scene w) 2)
      (place-image (bitmap/file "img/emosewa.gif")
                   600 360
-                  
                   (empty-scene 1200 720))]
     
     [(= (world-scene w) 3)
      (place-image
-      (triangle (world-c1now w) "solid" "green")
+      (circle (world-c1now w) "outline" "green")
       600 320
       (place-image
-       (square 20 "solid" "green")
-       (world-slide-h w) 650
+       (circle (* 1.3 (world-c1now w)) "outline" "green")
+       600 320
        (place-image
-        (rectangle 1100 500 "outline" "black")
+        (circle (* 0.9 (world-c1now w)) "outline" "green")
         600 320
         (place-image
-         (square 50 "solid" "green")
-         100 650
+         (circle (* 0.5 (world-c1now w)) "outline" "green")
+         600 320
          (place-image
-          (square 50 "solid" "red")
-          200 650
+          (square 20 "solid" "green")
+          (world-slide-h w) 650
           (place-image
-           (rectangle 500 20 "outline" "black")
-           900 650
+           (rectangle 1100 500 "outline" "black")
+           600 320
            (place-image
-            (rectangle 30 20 "solid" "hotpink")
-            40 30
+            (square 50 "solid" "green")
+            100 650
             (place-image
-             NXT-SNG
-             450 650
+             (square 50 "solid" "red")
+             200 650
              (place-image
-              PREV-SNG
-              350 650 
+              (rectangle 500 20 "outline" "black")
+              900 650
               (place-image
-               (rectangle 50 20 "outline" "black")
-               75 60
+               (rectangle 30 20 "solid" "hotpink")
+               40 30
                (place-image
-                (rectangle 50 20 "outline" "black")
-                125 60
+                NXT-SNG
+                450 650
                 (place-image
-                 (draw-visuals w)
-                 600 310
-                 (empty-scene 1200 720)))))))))))))] 
-    )) 
+                 PREV-SNG
+                 350 650 
+                 (place-image
+                  (rectangle 50 20 "outline" "black")
+                  75 60
+                  (place-image
+                   (rectangle 50 20 "outline" "black")
+                   125 60
+                   (place-image
+                    (rectangle 50 20 "outline" "black")
+                    175 60
+                    (place-image
+                     (rectangle 50 20 "outline" "black")
+                     225 60
+                     (place-image
+                      (draw-visuals w)
+                      600 310
+                      (empty-scene 1200 720))))))))))))))))))]
+    
+    [(= (world-scene w) 4)
+     (place-image
+      (circle (world-c1now w) "outline" "green")
+      600 320
+      (place-image
+       (circle (* 1.3 (world-c1now w)) "outline" "green")
+       600 320
+       (place-image
+        (circle (* 0.9 (world-c1now w)) "outline" "green")
+        600 320
+        (place-image
+         (circle (* 0.5 (world-c1now w)) "outline" "green")
+         600 320
+         (place-image
+          (square 20 "solid" "green")
+          (world-slide-h w) 650
+          (place-image
+           (rectangle 1100 500 "outline" "black")
+           600 320
+           (place-image
+            (square 50 "solid" "green")
+            100 650
+            (place-image
+             (square 50 "solid" "red")
+             200 650
+             (place-image
+              (rectangle 500 20 "outline" "black")
+              900 650
+              (place-image
+               (rectangle 30 20 "solid" "hotpink")
+               40 30
+               (place-image
+                NXT-SNG
+                450 650
+                (place-image
+                 PREV-SNG
+                 350 650 
+                 (place-image
+                  (rectangle 50 20 "outline" "black")
+                  75 60
+                  (place-image
+                   (rectangle 50 20 "outline" "black")
+                   125 60
+                   (place-image
+                    (rectangle 50 20 "outline" "black")
+                    175 60
+                    (place-image
+                     (rectangle 50 20 "outline" "black")
+                     225 60
+                     (place-image
+                      (draw-visuals w)
+                      600 310
+                      (empty-scene 1200 720))))))))))))))))))]
+    
+    [(= (world-scene w) 5)
+     (place-image
+      (circle (* 0.25 (world-c1now w)) "solid" "red")
+      600 320
+      (place-image
+       (circle (* 0.50 (world-c1now w)) "solid" "blue")
+       600 320
+       (place-image
+        (circle (* 0.75 (world-c1now w)) "solid" "green")
+        600 320
+        (place-image
+         (circle (* 1.00 (world-c1now w)) "solid" "orange")
+         600 320
+         (place-image
+          (square 20 "solid" "green")
+          (world-slide-h w) 650
+          (place-image
+           (rectangle 1100 500 "outline" "black")
+           600 320
+           (place-image
+            (square 50 "solid" "green")
+            100 650
+            (place-image
+             (square 50 "solid" "red")
+             200 650
+             (place-image
+              (rectangle 500 20 "outline" "black")
+              900 650
+              (place-image
+               (rectangle 30 20 "solid" "hotpink")
+               40 30
+               (place-image
+                NXT-SNG
+                450 650
+                (place-image
+                 PREV-SNG
+                 350 650 
+                 (place-image
+                  (rectangle 50 20 "outline" "black")
+                  75 60
+                  (place-image
+                   (rectangle 50 20 "outline" "black")
+                   125 60
+                   (place-image
+                    (rectangle 50 20 "outline" "black")
+                    175 60
+                    (place-image
+                     (rectangle 50 20 "outline" "black")
+                     225 60
+                     (place-image
+                      (draw-visuals w)
+                      600 310
+                      (empty-scene 1200 720))))))))))))))))))] 
+    
+    [(= (world-scene w) 6)
+     (local [(define square1 (square 50 "solid" "green"))]
+       (local [(define square2 (square 50 "solid" "black"))]
+         
+         (place-image
+          square1
+          200 (+ 320 (* .5 (world-c1now w)))
+          (place-image
+           square2
+           300 (+ 315 (* .75 (world-c1now w)))
+           (place-image
+            square1
+            400 (+ 300 (* 1.5 (world-c1now w)))
+            (place-image
+             square2
+             500 (+ 280 (* 2.5 (world-c1now w)))
+             (place-image
+              square1
+              600 (+ 250 (* 3.5 (world-c1now w)))
+              (place-image
+               square2
+               700 (+ 280 (* 2.5 (world-c1now w)))
+               (place-image
+                square1
+                800 (+ 300 (* 1.5 (world-c1now w)))
+                (place-image
+                 square2
+                 900 (+ 315 (* .75 (world-c1now w)))
+                 (place-image
+                  square1
+                  1000 (+ 320 (* .5 (world-c1now w)))
+                  
+                  (place-image
+                   (square 20 "solid" "green")
+                   (world-slide-h w) 650
+                   (place-image
+                    (rectangle 1100 500 "outline" "black")
+                    600 320
+                    (place-image
+                     (square 50 "solid" "green")
+                     100 650
+                     (place-image
+                      (square 50 "solid" "red")
+                      200 650
+                      (place-image
+                       (rectangle 500 20 "outline" "black")
+                       900 650
+                       (place-image
+                        (rectangle 30 20 "solid" "hotpink")
+                        40 30
+                        (place-image
+                         NXT-SNG
+                         450 650
+                         (place-image
+                          PREV-SNG
+                          350 650 
+                          (place-image
+                           (rectangle 50 20 "outline" "black")
+                           75 60
+                           (place-image
+                            (rectangle 50 20 "outline" "black")
+                            125 60
+                            (place-image
+                             (rectangle 50 20 "outline" "black")
+                             175 60
+                             (place-image
+                              (rectangle 50 20 "outline" "black")
+                              225 60
+                              (place-image
+                               (draw-visuals w)
+                               600 310
+                               (empty-scene 1200 720)))))))))))))))))))))))))]
+)) 
 ;bounds of buttons on menu screen
 (define X_BOUNDARY1 500)
 (define X_BOUNDARY2 700)
@@ -259,6 +465,23 @@
 (define X_BOUNDARY10 150)
 (define Y_BOUNDARY9 50)
 (define Y_BOUNDARY10 70)
+
+(define X_BOUNDARY11 100)
+(define X_BOUNDARY12 150)
+(define Y_BOUNDARY11 50)
+(define Y_BOUNDARY12 70)
+
+(define X_BOUNDARY13 150)
+(define X_BOUNDARY14 200)
+(define Y_BOUNDARY13 50)
+(define Y_BOUNDARY14 70)
+
+
+(define X_BOUNDARY15 200)
+(define X_BOUNDARY16 250)
+(define Y_BOUNDARY15 50)
+(define Y_BOUNDARY16 70)
+
 
 ;; next and previous button boundaries (next and previous y boundaries are the same)
 (define next-x-l (- 450 25)) ;left
@@ -329,6 +552,16 @@
        ;; Goes to screen 3 which is the same as 1 but different visuals
        [(and (> y Y_BOUNDARY9) (< y Y_BOUNDARY10) (> x X_BOUNDARY9) (< x X_BOUNDARY10) (not (= 0 (world-scene w)))(not (= 3 (world-scene w))))
         (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  3 (world-volume w)(world-p w) 1)]
+       ;; Goes to screen 4
+       [(and (> y Y_BOUNDARY11) (< y Y_BOUNDARY12) (> x X_BOUNDARY11) (< x X_BOUNDARY12) (not (= 0 (world-scene w)))(not (= 4 (world-scene w))))
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  4 (world-volume w)(world-p w) 1)]
+       ;; Goes to screen 5
+       [(and (> y Y_BOUNDARY13) (< y Y_BOUNDARY14) (> x X_BOUNDARY13) (< x X_BOUNDARY14) (not (= 0 (world-scene w)))(not (= 5 (world-scene w))))
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  5 (world-volume w)(world-p w) 1)]
+       ;; Goes to screen 6
+       [(and (> y Y_BOUNDARY15) (< y Y_BOUNDARY16) (> x X_BOUNDARY15) (< x X_BOUNDARY16) (not (= 0 (world-scene w)))(not (= 6 (world-scene w))))
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  6 (world-volume w)(world-p w) 1)]
+       
        
        ;;stops pstream
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
