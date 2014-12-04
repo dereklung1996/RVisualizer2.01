@@ -16,7 +16,7 @@
 (define SONG-LOCATION4 "songs/Looking Glass.wav")
 (define SONG-LOCATION5 "songs/Luv Sick.wav")
 
-(define SONG1 (rs-read/clip SONG-LOCATION1 0 (rs-frames (rs-read SONG-LOCATION1)))) ;(* 44100 30)))
+(define SONG1 (rs-read/clip SONG-LOCATION1 0 (rs-frames (rs-read SONG-LOCATION1)))) 
 (define SONG2 (rs-read/clip SONG-LOCATION2 0 (rs-frames (rs-read SONG-LOCATION2))))
 (define SONG3 (rs-read/clip SONG-LOCATION3 0 (rs-frames (rs-read SONG-LOCATION3))))
 (define SONG4 (rs-read/clip SONG-LOCATION4 0 (rs-frames (rs-read SONG-LOCATION4))))
@@ -38,6 +38,7 @@
 
 
 (define INITIAL-WORLD (make-world 0 0 300 300 900 false 0 0 SONG1 SONG-LOCATION1 false))
+
 (define volume-song (box 1))
 (define ctr (box 5))
 (define play-speed (box (world-p INITIAL-WORLD)))
@@ -80,7 +81,7 @@
                    (set-box! cur-frame ctr)
                    (* (unbox volume-song) ; volume
                       (rs-ith/left (unbox cur-song) ctr)))]  
-          ))
+          )) 
 
 ;; CREATES VISUALS
 ;; world -> world
@@ -102,18 +103,17 @@
         )))
 
 ;; DRAWS SOME IMAGES
-(define BACKGROUND-IMG (scale/xy 1.5 1.5 (bitmap/file "img/bg1.png")))
-(define play-button (bitmap/file "img/play-button.png"))
-(define pause-button 
-  (place-image
-   (rectangle 10 50 "solid" "green")
-   10 25
-   (place-image 
-    (rectangle 10 50 "solid" "green")
-    40 25
-    (square 50 0 "red"))))
 
-(define R-LOGO (scale/xy 2 2 (bitmap/file "img/logo.png")))  
+;; defines play and pause buttons
+
+(define play-button (bitmap/file "img/play-button.png"))
+(define pause-button (bitmap/file "img/pause-button.png"))
+
+;; Visuals
+(define R-LOGO (scale/xy 2 2 (bitmap/file "img/logo.png")))
+(define BACKGROUND-IMG (scale/xy 1.5 1.5 (bitmap/file "img/bg1.png")))
+
+;; Menu Buttons
 (define STRT-BUTTON 
   (overlay
    (text "Visualizer" 24 "green")
@@ -121,18 +121,18 @@
 (define AWESOME-BUTTON 
   (overlay
    (text "???" 24 "green")
-  (bitmap/file "img/sample-button.png")))
+   (bitmap/file "img/sample-button.png")))
+(define return-button
+  (overlay
+   (text "return" 12 "white")
+   (rectangle 30 20 "solid" "cyan")
+   (rectangle 35 25 "solid" "blue")))
+;; Next and Previous Song Buttons
 
-(define NXT-SNG 
-  (place-image
-   (text "next" 12 "white")
-   25 10
-   (rectangle 50 20 "solid" "blue")))
-(define PREV-SNG 
-  (place-image
-   (text "previous" 12 "white")
-   30 10
-   (rectangle 60 20 "solid" "purple")))
+(define NXT-SNG (bitmap/file "img/next-button.png"))
+(define PREV-SNG (rotate 180 (bitmap/file "img/next-button.png")))
+
+;; Displays what the current song is playing
 (define (NOWPLAYING w)
   (place-image
    (text 
@@ -140,10 +140,10 @@
      "Now Playing: " (substring (world-cs-name w) 6 (- (string-length (world-cs-name w)) 3))) 
     15 "white")
    150 20
-   (rectangle 300 40 "solid" "black"))) 
+   (rectangle 300 40 "solid" "orange"))) 
 
 ;; draws some background colors and adds some debugging information.
-(define (draw-visuals w) 
+(define (draw-visuals w)  
   (above
    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
@@ -156,13 +156,32 @@
   (place-image
    (overlay
     (circle 4 "solid" "black")
-     (circle 7 "solid" "green"))
+    (circle 7 "solid" "green"))
    (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
    (rectangle 1000 12 "solid" "cyan")
    ))
 
 ;; Create bg for visualizer
-(define background-visuals (bitmap/file "img/bg2.png"))
+(define background-visuals (bitmap/file "img/bg2-1.png"))
+
+;; tab drawer
+(define (tab-draw num)
+  (overlay
+   (text (number->string num) 12 "gray")
+   (rectangle 50 20 "outline" "gray")))
+
+;; volume draw
+(define volume-dragger
+  (overlay
+   (square 15 "solid" "cyan")
+   (square 20 "solid" "white")
+   ))
+
+(define volume-bar
+  (rectangle 500 20 "solid" "black"))
+
+(define volume-icon (bitmap/file "img/volume-icon.png"))
+
 
 
 ;; Draws the scene 
@@ -191,7 +210,7 @@
               (make-color 150 0 150)) 
         600 320
         (place-image
-         (square 20 "solid" "green")
+         volume-dragger
          (world-slide-h w) 650
          
          (place-image
@@ -199,12 +218,15 @@
           100 650
           (place-image
            pause-button
-           200 650 
+           200 650
            (place-image
-            (rectangle 500 20 "outline" "black")
+            volume-icon
+            600 650
+           (place-image
+            volume-bar
             900 650
             (place-image
-             (rectangle 30 20 "solid" "hotpink")
+             return-button
              40 30
              (place-image 
               NXT-SNG
@@ -213,16 +235,16 @@
                PREV-SNG
                350 650
                (place-image
-                (rectangle 50 20 "outline" "black")
+                (tab-draw 1)
                 75 60
                 (place-image
-                 (rectangle 50 20 "outline" "black")
+                 (tab-draw 2)
                  125 60
                  (place-image
-                  (rectangle 50 20 "outline" "black")
+                  (tab-draw 3)
                   175 60
                   (place-image
-                   (rectangle 50 20 "outline" "black")
+                   (tab-draw 4)
                    225 60
                    (place-image
                     (draw-visuals w)
@@ -233,7 +255,7 @@
                      (place-image
                       background-visuals
                       600 360
-                      (empty-scene 1200 720))))))))))))))))))]
+                      (empty-scene 1200 720)))))))))))))))))))]
     
     [(= (world-scene w) 2)
      (place-image
@@ -244,8 +266,11 @@
       (place-image
        (ellipse 500 150 200 "gray")
        600 360
-       (empty-scene 1200 720)))]
-    
+       (place-image
+        return-button
+        40 30
+        (empty-scene 1200 720))))]
+
     
     [(= (world-scene w) 3)
      (place-image
@@ -264,9 +289,8 @@
           (circle (* 0.5 (world-c1now w)) "outline" "green")
           600 320
           (place-image
-           (square 20 "solid" "green")
+           volume-dragger
            (world-slide-h w) 650
-           
            (place-image
             play-button
             100 650
@@ -274,10 +298,13 @@
              pause-button
              200 650
              (place-image
-              (rectangle 500 20 "outline" "black")
+            volume-icon
+            600 650
+             (place-image
+              volume-bar
               900 650
               (place-image
-               (rectangle 30 20 "solid" "hotpink")
+               return-button
                40 30
                (place-image
                 NXT-SNG
@@ -286,16 +313,16 @@
                  PREV-SNG
                  350 650 
                  (place-image
-                  (rectangle 50 20 "outline" "black")
+                  (tab-draw 1)
                   75 60
                   (place-image
-                   (rectangle 50 20 "outline" "black")
+                   (tab-draw 2)
                    125 60
                    (place-image
-                    (rectangle 50 20 "outline" "black")
+                    (tab-draw 3)
                     175 60
                     (place-image
-                     (rectangle 50 20 "outline" "black")
+                     (tab-draw 4)
                      225 60
                      (place-image
                       (draw-visuals w)
@@ -306,7 +333,7 @@
                        (place-image
                         background-visuals
                         600 360
-                        (empty-scene 1200 720))))))))))))))))))))]
+                        (empty-scene 1200 720)))))))))))))))))))))] 
     
     [(= (world-scene w) 4)
      (place-image
@@ -325,49 +352,51 @@
           (circle (* 1.00 (world-c1now w)) "solid" "orange")
           600 320
           (place-image
-           (square 20 "solid" "green")
+           volume-dragger
            (world-slide-h w) 650
            (place-image
-            background-visuals
-            600 360
+            play-button
+            100 650
             (place-image
-             play-button
-             100 650
+             pause-button
+             200 650
              (place-image
-              pause-button
-              200 650
+            volume-icon
+            600 650
+             (place-image
+              volume-bar
+              900 650
               (place-image
-               (rectangle 500 20 "outline" "black")
-               900 650
+               return-button
+               40 30
                (place-image
-                (rectangle 30 20 "solid" "hotpink")
-                40 30
+                NXT-SNG
+                450 650
                 (place-image
-                 NXT-SNG
-                 450 650
+                 PREV-SNG
+                 350 650 
                  (place-image
-                  PREV-SNG
-                  350 650 
+                  (tab-draw 1)
+                  75 60
                   (place-image
-                   (rectangle 50 20 "outline" "black")
-                   75 60
+                   (tab-draw 2)
+                   125 60
                    (place-image
-                    (rectangle 50 20 "outline" "black")
-                    125 60
+                    (tab-draw 3)
+                    175 60
                     (place-image
-                     (rectangle 50 20 "outline" "black")
-                     175 60
+                     (tab-draw 4)
+                     225 60
                      (place-image
-                      (rectangle 50 20 "outline" "black")
-                      225 60
-                      
-                      (place-image
+                      (draw-visuals w)
+                      600 310
+                      (place-image 
                        (NOWPLAYING w)
                        600 500
                        (place-image
                         background-visuals
                         600 360
-                        (empty-scene 1200 720))))))))))))))))))))]
+                        (empty-scene 1200 720)))))))))))))))))))))]
     
     [(= (world-scene w) 5)
      
@@ -403,11 +432,9 @@
                   (place-image
                    square1
                    1000 (+ 320 (* .5 (world-c1now w)))
-                   
                    (place-image
-                    (square 20 "solid" "green")
+                    volume-dragger
                     (world-slide-h w) 650
-                    
                     (place-image
                      play-button
                      100 650
@@ -415,10 +442,13 @@
                       pause-button
                       200 650
                       (place-image
-                       (rectangle 500 20 "outline" "black")
-                       900 650
+                       volume-icon
+                       600 650
                        (place-image
-                        (rectangle 30 20 "solid" "hotpink")
+                        volume-bar
+                        900 650
+                        (place-image
+                        return-button
                         40 30
                         (place-image
                          NXT-SNG
@@ -427,16 +457,16 @@
                           PREV-SNG
                           350 650 
                           (place-image
-                           (rectangle 50 20 "outline" "black")
+                           (tab-draw 1)
                            75 60
                            (place-image
-                            (rectangle 50 20 "outline" "black")
+                            (tab-draw 2)
                             125 60
                             (place-image
-                             (rectangle 50 20 "outline" "black")
+                             (tab-draw 3)
                              175 60
                              (place-image
-                              (rectangle 50 20 "outline" "black")
+                              (tab-draw 4)
                               225 60
                               (place-image
                                (draw-visuals w)
@@ -447,7 +477,7 @@
                                 (place-image
                                  background-visuals
                                  600 360
-                                 (empty-scene 1200 720)))))))))))))))))))))))))))]
+                                 (empty-scene 1200 720))))))))))))))))))))))))))))]
     ))  
 
 
