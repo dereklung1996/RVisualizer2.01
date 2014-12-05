@@ -26,7 +26,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -41,3 +42,18 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+img/bgmov/anim00.png
+img/bgmov/anim01.png
+img/bgmov/anim02.png
+img/bgmov/anim03.png
+img/bgmov/anim04.png
+img/bgmov/anim05.png
+img/bgmov/anim06.png
+img/bgmov/anim07.png
+img/bgmov/anim08.png
+img/bgmov/anim09.png
+img/bgmov/anim10.png
+img/bgmov/anim11.png
+img/bgmov/anim12.png
+img/bgmov/anim13.png
+img/bgmov/anim14.png
