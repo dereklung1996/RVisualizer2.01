@@ -9,12 +9,14 @@
 (require racket/base)
 (require racket/async-channel)
 
+;; create new defs here to add songs
 
 (define SONG-LOCATION1 "songs/Derezzed.wav")
 (define SONG-LOCATION2 "songs/The Intro.wav")
 (define SONG-LOCATION3 "songs/rct2theme.wav")
 (define SONG-LOCATION4 "songs/Looking Glass.wav")
 (define SONG-LOCATION5 "songs/Luv Sick.wav")
+
 
 (define SONG1 (rs-read SONG-LOCATION1))
 (define SONG2 (rs-read SONG-LOCATION2))
@@ -246,17 +248,14 @@
              (circle (* 1.5 (world-c1now w)) "solid" "black")
              (+ 50 (random 1100)) (+ 70 (random 500))
              
-             (place-image
-              (line 200 (world-c1now w) "white")
-              600 320
-              
+           
               (place-image
                (rectangle 1200 720 "solid" (make-color 
                                             (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
                                             (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
                                             (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
                600 360
-               (empty-scene 1200 720)))))))))
+               (empty-scene 1200 720))))))))
      ]
     )
   ; )
