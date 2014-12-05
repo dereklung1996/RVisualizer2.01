@@ -37,7 +37,7 @@
 
 
 
-(define INITIAL-WORLD (make-world 0 0 300 300 900 false 0 0 SONG1 SONG-LOCATION1 false))
+(define INITIAL-WORLD (make-world 0 0 300 300 1100 false 0 0 SONG1 SONG-LOCATION1 false))
 
 (define volume-song (box 1))
 (define ctr (box 5))
@@ -132,12 +132,14 @@
 (define NXT-SNG (bitmap/file "img/next-button.png"))
 (define PREV-SNG (rotate 180 (bitmap/file "img/next-button.png")))
 
+(define CLEMENTS (bitmap/file "img/clements.png"))
+
 ;; Displays what the current song is playing
 (define (NOWPLAYING w)
   (place-image
    (text 
     (string-append 
-     "Now Playing: " (substring (world-cs-name w) 6 (- (string-length (world-cs-name w)) 3))) 
+     "Now Playing: " (substring (world-cs-name w) 6 (- (string-length (world-cs-name w)) 4))) 
     15 "white")
    150 20
    (rectangle 300 40 "solid" "orange"))) 
@@ -145,8 +147,8 @@
 ;; draws the visualizer parts of the scene
 (define (draw-visuals w s)  
   ;; debug text
-  (overlay
-   (above/align "left"
+  ;(overlay
+   #;(above/align "left"
     (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
     (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
     (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
@@ -200,36 +202,12 @@
       ]
      
      [(= s 5) 
-      (local [(define square1 (square 50 "solid" "green"))]
-       (local [(define square2 (square 50 "solid" "black"))]
-          (place-image
-           square1
-           200 (+ 320 (* .5 (world-c1now w)))
-           (place-image
-            square2
-            300 (+ 315 (* .75 (world-c1now w)))
-            (place-image
-             square1
-             400 (+ 300 (* 1.5 (world-c1now w)))
-             (place-image
-              square2
-              500 (+ 280 (* 2.5 (world-c1now w)))
-              (place-image
-               square1
-               600 (+ 250 (* 3.5 (world-c1now w)))
-               (place-image
-                square2
-                700 (+ 280 (* 2.5 (world-c1now w)))
-                (place-image
-                 square1
-                 800 (+ 300 (* 1.5 (world-c1now w)))
-                 (place-image
-                  square2
-                  900 (+ 315 (* .75 (world-c1now w)))
-                  (place-image
-                   square1
-                   1000 (+ 320 (* .5 (world-c1now w)))
-                   (rectangle 1200 720 "solid" "black"))))))))))))
+      (place-image
+       ;(radial-star  (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) (world-c1now w) (+ 10 (world-c1now w)) "outline" "red")
+       (radial-star (+ (round (/ (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) 4)) 2 
+                       (round (/ (world-c1now w) 3))) (+ 55 (* 0.5 (world-c1now w))) (+ 60 (* 0.7 (world-c1now w))) "outline" "red")
+       600 320
+       (rectangle 1200 720 "solid" "black"))
       ]
      
      [(= s 6) 
@@ -264,7 +242,7 @@
                (empty-scene 1200 720)))))))))
       ]
      )
-   )
+  ; )
   )
 
 
@@ -370,17 +348,67 @@
     
     [(= (world-scene w) 2)
      (place-image
-      (above
-       (text " E M O S E W A " 34 "red")
-       (text " A W E S O M E " 34 "blue"))
+      (overlay
+       (rotate (* 3 (unbox time-ticks) (/ 360 255))
+              (above
+               (text " E M O S E W A " 100 (make-color 255 76 50 255))
+               (text " A W E S O M E " 100 (make-color 50 76 255 255))))
+       (rotate (- 1 (* 3 (unbox time-ticks)) (/ 360 255))
+              (above
+               (text " E M O S E W A " 100 (make-color 255 76 50 150))
+               (text " A W E S O M E " 100 (make-color 50 76 255 150))))
+      (rotate (- 2 (* 3 (unbox time-ticks)) (/ 360 255))
+              (above
+               (text " E M O S E W A " 100 (make-color 255 76 50 75))
+               (text " A W E S O M E " 100 (make-color 50 76 255 75))))
+              )
       600 360
       (place-image
-       (ellipse 500 150 200 "gray")
-       600 360
-       (place-image
         return-button
         40 30
-        (empty-scene 1200 720))))]
+        (place-image
+         (scale (* 2 (random)) CLEMENTS)
+         (random 1200)
+         (random 720)
+         (place-image
+          (scale (* 0.6 (random)) CLEMENTS)
+          (random 1200)
+          (random 720)
+          (place-image
+           (scale (* 3 (random)) CLEMENTS)
+           (random 1200)
+           (random 720)
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 80) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 70) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 60) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 50) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 40) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 30) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 20) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 10) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 5) CLEMENTS)
+           600 360
+           (place-image
+           (scale (/ (+ 1 (unbox time-ticks)) 2) CLEMENTS)
+           600 360
+           (empty-scene 1200 720))))))))))))))))]
     ))  
 
 
