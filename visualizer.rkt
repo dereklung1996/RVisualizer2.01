@@ -231,10 +231,41 @@
                    1000 (+ 320 (* .5 (world-c1now w)))
                    (empty-scene 1200 720))))))))))))
       ]
+     
+     [(= s 6) 
+      (local [(define square1 (square 50 "solid" "green"))]
+       (local [(define square2 (square 50 "solid" "black"))]
+         (place-image 
+          (circle (* 2 (world-c1now w)) "solid" "cyan")
+          (+ 50 (random 1100)) (+ 70 (random 500))
+          
+          (place-image
+           (circle (* .5 (world-c1now w)) "solid" "black")
+           (+ 50 (random 1100)) (+ 70 (random 500))
+           
+           (place-image
+            (circle (* .5 (world-c1now w)) "solid" "darkslategray")
+            (+ 50 (random 1100)) (+ 70 (random 500))
+            
+            (place-image
+             (circle (* 1.5 (world-c1now w)) "solid" "black")
+             (+ 50 (random 1100)) (+ 70 (random 500))
+             
+             (place-image
+              (line 200 (world-c1now w) "white")
+              600 320
+              
+              (place-image
+               (rectangle 1200 720 "solid" (make-color 
+                                            (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
+                                            (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
+                                            (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
+               600 360
+               (empty-scene 1200 720)))))))))
+      ]
      )
-   
    )
-   )
+  )
 
 
 ;; Creates Song Position Slider
@@ -281,7 +312,7 @@
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
     
-    [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5))
+    [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5) (= (world-scene w) 6))
      (place-image
       (draw-song-slider w)
       600 550
@@ -322,16 +353,18 @@
                   (tab-draw 4)
                   225 60
                   (place-image
-                   (NOWPLAYING w)
-                   600 500
+                   (tab-draw 5)
+                   275 60
                    (place-image
-                    background-visuals
-                    600 360
+                    (NOWPLAYING w)
+                    600 500
                     (place-image
-                     (crop 50 70 1100 500
-                     (draw-visuals w (world-scene w)))
+                     background-visuals
                      600 360
-                     (empty-scene 1200 720)))))))))))))))))
+                     (place-image
+                      (draw-visuals w (world-scene w))
+                      600 360
+                      (empty-scene 1200 720))))))))))))))))))
      ]
     
     [(= (world-scene w) 2)
@@ -381,6 +414,9 @@
 
 (define X_BOUNDARY15 200)
 (define X_BOUNDARY16 250)
+
+(define X_BOUNDARY17 300)
+
 ;; y Bounds for tabs are the same
 (define Y_BOUNDARY7 50)
 (define Y_BOUNDARY8 70)
@@ -490,6 +526,10 @@
        ;; Goes to screen 5
        [(and (> y Y_BOUNDARY7) (< y Y_BOUNDARY8) (> x X_BOUNDARY15) (< x X_BOUNDARY16) (not (= 0 (world-scene w)))(not (= 5 (world-scene w))))
         (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 5 (world-p w) (world-cs w)
+                    (world-cs-name w)(world-song-drag? w))]
+       ;; Goes to screen 6
+       [(and (> y Y_BOUNDARY7) (< y Y_BOUNDARY8) (> x X_BOUNDARY16) (< x X_BOUNDARY17) (not (= 0 (world-scene w)))(not (= 6 (world-scene w))))
+        (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 6 (world-p w) (world-cs w)
                     (world-cs-name w)(world-song-drag? w))]
        
        ;;pause
