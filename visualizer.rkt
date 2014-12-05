@@ -16,11 +16,11 @@
 (define SONG-LOCATION4 "songs/Looking Glass.wav")
 (define SONG-LOCATION5 "songs/Luv Sick.wav")
 
-(define SONG1 (rs-read/clip SONG-LOCATION1 0 (rs-frames (rs-read SONG-LOCATION1)))) 
-(define SONG2 (rs-read/clip SONG-LOCATION2 0 (rs-frames (rs-read SONG-LOCATION2))))
-(define SONG3 (rs-read/clip SONG-LOCATION3 0 (rs-frames (rs-read SONG-LOCATION3))))
-(define SONG4 (rs-read/clip SONG-LOCATION4 0 (rs-frames (rs-read SONG-LOCATION4))))
-(define SONG5 (rs-read/clip SONG-LOCATION5 0 (rs-frames (rs-read SONG-LOCATION5))))
+(define SONG1 (rs-read SONG-LOCATION1))
+(define SONG2 (rs-read SONG-LOCATION2))
+(define SONG3 (rs-read SONG-LOCATION3))
+(define SONG4 (rs-read SONG-LOCATION4))
+(define SONG5 (rs-read SONG-LOCATION5))
 
 
 (define SONGLEN1 (rs-frames SONG1))
@@ -142,13 +142,99 @@
    150 20
    (rectangle 300 40 "solid" "orange"))) 
 
-;; draws some background colors and adds some debugging information.
-(define (draw-visuals w)  
-  (above
-   (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
-   (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
-   (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "black")
-   ))
+;; draws the visualizer parts of the scene
+(define (draw-visuals w s)  
+  ;; debug text
+  (overlay
+   (above/align "left"
+    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
+    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
+    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "black")
+    )
+   
+   (cond
+     [(= s 1) 
+      (place-image
+       (star (world-c1now w) "solid" 
+             (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
+                         (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
+                         (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
+       600 320
+       (place-image
+        (star (* (world-c1now w) 1.5) "solid" 
+              (make-color 150 0 150))
+       600 320
+       (empty-scene 1200 720)))
+      ]
+     
+     [(= s 3) 
+      (place-image
+       (circle (world-c1now w) "outline" "green")
+       600 320
+       (place-image
+        (circle (* 1.3 (world-c1now w)) "outline" "green")
+        600 320
+        (place-image
+         (circle (* 0.9 (world-c1now w)) "outline" "green")
+         600 320
+         (place-image
+          (circle (* 0.5 (world-c1now w)) "outline" "green")
+          600 320
+          (empty-scene 1200 720)))))
+      ]
+     
+     [(= s 4) 
+      (place-image
+       (circle (* 0.25 (world-c1now w)) "solid" "red")
+       600 320
+       (place-image
+        (circle (* 0.50 (world-c1now w)) "solid" "blue")
+        600 320
+        (place-image
+         (circle (* 0.75 (world-c1now w)) "solid" "green")
+         600 320
+         (place-image
+          (circle (* 1.00 (world-c1now w)) "solid" "orange")
+          600 320
+          (empty-scene 1200 720)))))
+      ]
+     
+     [(= s 5) 
+      (local [(define square1 (square 50 "solid" "green"))]
+       (local [(define square2 (square 50 "solid" "black"))]
+          (place-image
+           square1
+           200 (+ 320 (* .5 (world-c1now w)))
+           (place-image
+            square2
+            300 (+ 315 (* .75 (world-c1now w)))
+            (place-image
+             square1
+             400 (+ 300 (* 1.5 (world-c1now w)))
+             (place-image
+              square2
+              500 (+ 280 (* 2.5 (world-c1now w)))
+              (place-image
+               square1
+               600 (+ 250 (* 3.5 (world-c1now w)))
+               (place-image
+                square2
+                700 (+ 280 (* 2.5 (world-c1now w)))
+                (place-image
+                 square1
+                 800 (+ 300 (* 1.5 (world-c1now w)))
+                 (place-image
+                  square2
+                  900 (+ 315 (* .75 (world-c1now w)))
+                  (place-image
+                   square1
+                   1000 (+ 320 (* .5 (world-c1now w)))
+                   (empty-scene 1200 720))))))))))))
+      ]
+     )
+   
+   )
+   )
 
 
 ;; Creates Song Position Slider
@@ -188,74 +274,65 @@
 ;; world -> world 
 (define (draw w)
   (cond
-    
     [(= (world-scene w) 0)
      (place-image STRT-BUTTON 600 350
                   (place-image AWESOME-BUTTON 600 450
                                (place-image R-LOGO 600 200
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
-    [(= (world-scene w) 1)
+    
+    [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5))
      (place-image
       (draw-song-slider w)
       600 550
       (place-image
-       (star (world-c1now w) "solid" 
-             (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
-                         (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
-                         (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks))))) 
-       600 320
+       volume-dragger
+       (world-slide-h w) 650
        (place-image
-        (star (* (world-c1now w) 1.5) "solid" 
-              (make-color 150 0 150)) 
-        600 320
+        play-button
+        100 650
         (place-image
-         volume-dragger
-         (world-slide-h w) 650
-         
+         pause-button
+         200 650
          (place-image
-          play-button
-          100 650
+          volume-icon
+          600 650
           (place-image
-           pause-button
-           200 650
+           volume-bar
+           900 650
            (place-image
-            volume-icon
-            600 650
-           (place-image
-            volume-bar
-            900 650
-            (place-image
-             return-button
-             40 30
-             (place-image 
-              NXT-SNG
-              450 650
+            return-button
+            40 30
+            (place-image 
+             NXT-SNG
+             450 650
+             (place-image
+              PREV-SNG
+              350 650
               (place-image
-               PREV-SNG
-               350 650
+               (tab-draw 1)
+               75 60
                (place-image
-                (tab-draw 1)
-                75 60
+                (tab-draw 2)
+                125 60
                 (place-image
-                 (tab-draw 2)
-                 125 60
+                 (tab-draw 3)
+                 175 60
                  (place-image
-                  (tab-draw 3)
-                  175 60
+                  (tab-draw 4)
+                  225 60
                   (place-image
-                   (tab-draw 4)
-                   225 60
+                   (NOWPLAYING w)
+                   600 500
                    (place-image
-                    (draw-visuals w)
-                    600 310
+                    background-visuals
+                    600 360
                     (place-image
-                     (NOWPLAYING w)
-                     600 500
-                     (place-image
-                      background-visuals
-                      600 360
-                      (empty-scene 1200 720)))))))))))))))))))]
+                     (crop 50 70 1100 500
+                     (draw-visuals w (world-scene w)))
+                     600 360
+                     (empty-scene 1200 720)))))))))))))))))
+     ]
     
     [(= (world-scene w) 2)
      (place-image
@@ -270,214 +347,6 @@
         return-button
         40 30
         (empty-scene 1200 720))))]
-
-    
-    [(= (world-scene w) 3)
-     (place-image
-      (draw-song-slider w)
-      600 550
-      (place-image
-       (circle (world-c1now w) "outline" "green")
-       600 320
-       (place-image
-        (circle (* 1.3 (world-c1now w)) "outline" "green")
-        600 320
-        (place-image
-         (circle (* 0.9 (world-c1now w)) "outline" "green")
-         600 320
-         (place-image
-          (circle (* 0.5 (world-c1now w)) "outline" "green")
-          600 320
-          (place-image
-           volume-dragger
-           (world-slide-h w) 650
-           (place-image
-            play-button
-            100 650
-            (place-image
-             pause-button
-             200 650
-             (place-image
-            volume-icon
-            600 650
-             (place-image
-              volume-bar
-              900 650
-              (place-image
-               return-button
-               40 30
-               (place-image
-                NXT-SNG
-                450 650
-                (place-image
-                 PREV-SNG
-                 350 650 
-                 (place-image
-                  (tab-draw 1)
-                  75 60
-                  (place-image
-                   (tab-draw 2)
-                   125 60
-                   (place-image
-                    (tab-draw 3)
-                    175 60
-                    (place-image
-                     (tab-draw 4)
-                     225 60
-                     (place-image
-                      (draw-visuals w)
-                      600 310
-                      (place-image
-                       (NOWPLAYING w)
-                       600 500
-                       (place-image
-                        background-visuals
-                        600 360
-                        (empty-scene 1200 720)))))))))))))))))))))] 
-    
-    [(= (world-scene w) 4)
-     (place-image
-      (draw-song-slider w)
-      600 550
-      (place-image
-       (circle (* 0.25 (world-c1now w)) "solid" "red")
-       600 320
-       (place-image
-        (circle (* 0.50 (world-c1now w)) "solid" "blue")
-        600 320
-        (place-image
-         (circle (* 0.75 (world-c1now w)) "solid" "green")
-         600 320
-         (place-image
-          (circle (* 1.00 (world-c1now w)) "solid" "orange")
-          600 320
-          (place-image
-           volume-dragger
-           (world-slide-h w) 650
-           (place-image
-            play-button
-            100 650
-            (place-image
-             pause-button
-             200 650
-             (place-image
-            volume-icon
-            600 650
-             (place-image
-              volume-bar
-              900 650
-              (place-image
-               return-button
-               40 30
-               (place-image
-                NXT-SNG
-                450 650
-                (place-image
-                 PREV-SNG
-                 350 650 
-                 (place-image
-                  (tab-draw 1)
-                  75 60
-                  (place-image
-                   (tab-draw 2)
-                   125 60
-                   (place-image
-                    (tab-draw 3)
-                    175 60
-                    (place-image
-                     (tab-draw 4)
-                     225 60
-                     (place-image
-                      (draw-visuals w)
-                      600 310
-                      (place-image 
-                       (NOWPLAYING w)
-                       600 500
-                       (place-image
-                        background-visuals
-                        600 360
-                        (empty-scene 1200 720)))))))))))))))))))))]
-    
-    [(= (world-scene w) 5)
-     
-     (local [(define square1 (square 50 "solid" "green"))]
-       (local [(define square2 (square 50 "solid" "black"))]
-         (place-image
-          (draw-song-slider w)
-          600 550
-          (place-image
-           square1
-           200 (+ 320 (* .5 (world-c1now w)))
-           (place-image
-            square2
-            300 (+ 315 (* .75 (world-c1now w)))
-            (place-image
-             square1
-             400 (+ 300 (* 1.5 (world-c1now w)))
-             (place-image
-              square2
-              500 (+ 280 (* 2.5 (world-c1now w)))
-              (place-image
-               square1
-               600 (+ 250 (* 3.5 (world-c1now w)))
-               (place-image
-                square2
-                700 (+ 280 (* 2.5 (world-c1now w)))
-                (place-image
-                 square1
-                 800 (+ 300 (* 1.5 (world-c1now w)))
-                 (place-image
-                  square2
-                  900 (+ 315 (* .75 (world-c1now w)))
-                  (place-image
-                   square1
-                   1000 (+ 320 (* .5 (world-c1now w)))
-                   (place-image
-                    volume-dragger
-                    (world-slide-h w) 650
-                    (place-image
-                     play-button
-                     100 650
-                     (place-image
-                      pause-button
-                      200 650
-                      (place-image
-                       volume-icon
-                       600 650
-                       (place-image
-                        volume-bar
-                        900 650
-                        (place-image
-                        return-button
-                        40 30
-                        (place-image
-                         NXT-SNG
-                         450 650
-                         (place-image
-                          PREV-SNG
-                          350 650 
-                          (place-image
-                           (tab-draw 1)
-                           75 60
-                           (place-image
-                            (tab-draw 2)
-                            125 60
-                            (place-image
-                             (tab-draw 3)
-                             175 60
-                             (place-image
-                              (tab-draw 4)
-                              225 60
-                              (place-image
-                               (draw-visuals w)
-                               600 310
-                               (place-image
-                                (NOWPLAYING w)
-                                600 500
-                                (place-image
-                                 background-visuals
-                                 600 360
-                                 (empty-scene 1200 720))))))))))))))))))))))))))))]
     ))  
 
 
@@ -634,7 +503,7 @@
         (begin
           (set-box! play-speed 1);(define-struct world[t a c1now c1go slide-h drag? scene p cs cs-name song-drag?])
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w) 1 (world-cs w)
-                      (world-cs-name w)(world-song-drag? w)))] 
+                      (world-cs-name w)(world-song-drag? w)))]
        [else w])]
     ;; makes drag? false when button is not held down
     [(mouse=? event "button-up")
