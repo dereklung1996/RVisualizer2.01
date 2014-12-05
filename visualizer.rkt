@@ -124,7 +124,7 @@
    (bitmap/file "img/sample-button.png")))
 (define return-button
   (overlay
-   (text "return" 12 "white")
+   (text "return" 10 "red")
    (rectangle 30 20 "solid" "cyan")
    (rectangle 35 25 "solid" "blue")))
 ;; Next and Previous Song Buttons
@@ -141,15 +141,15 @@
     15 "white")
    150 20
    (rectangle 300 40 "solid" "orange"))) 
-
+ 
 ;; draws the visualizer parts of the scene
 (define (draw-visuals w s)  
   ;; debug text
   (overlay
    (above/align "left"
-    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
-    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
-    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "black")
+    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
+    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
+    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
     )
    
    (cond
@@ -164,39 +164,39 @@
         (star (* (world-c1now w) 1.5) "solid" 
               (make-color 150 0 150))
        600 320
-       (empty-scene 1200 720)))
+       (rectangle 1200 720 "solid" "black")))
       ]
      
      [(= s 3) 
       (place-image
-       (circle (world-c1now w) "outline" "green")
+       (circle (* 1.5 (world-c1now w)) "outline" "green")
        600 320
        (place-image
-        (circle (* 1.3 (world-c1now w)) "outline" "green")
+        (circle (* 1.25 (world-c1now w)) "outline" "green")
         600 320
         (place-image
-         (circle (* 0.9 (world-c1now w)) "outline" "green")
+         (circle (* 1 (world-c1now w)) "outline" "green") 
          600 320
          (place-image
-          (circle (* 0.5 (world-c1now w)) "outline" "green")
+          (circle (* 0.75 (world-c1now w)) "outline" "green")
           600 320
-          (empty-scene 1200 720)))))
+          (rectangle 1200 720 "solid" "black")))))
       ]
      
      [(= s 4) 
-      (place-image
-       (circle (* 0.25 (world-c1now w)) "solid" "red")
-       600 320
-       (place-image
-        (circle (* 0.50 (world-c1now w)) "solid" "blue")
-        600 320
-        (place-image
-         (circle (* 0.75 (world-c1now w)) "solid" "green")
+      (local [(define colors (make-color 
+                             0
+                             252
+                             (if (> 128 (unbox time-ticks))(+ 50 (unbox time-ticks)) (- 305 (unbox time-ticks)))))]
+        (place-image 
+         (underlay (ellipse (+ 10 (* 1.5 (world-c1now w))) (+ 60 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 20 (* 1.5 (world-c1now w))) (+ 50 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 30 (* 1.5 (world-c1now w))) (+ 40 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 40 (* 1.5 (world-c1now w))) (+ 30 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 50 (* 1.5 (world-c1now w))) (+ 20 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 60 (* 1.5 (world-c1now w))) (+ 10 (* 1.5 (world-c1now w))) 40 colors))
          600 320
-         (place-image
-          (circle (* 1.00 (world-c1now w)) "solid" "orange")
-          600 320
-          (empty-scene 1200 720)))))
+          (rectangle 1200 720 "solid" "black")))
       ]
      
      [(= s 5) 
@@ -229,7 +229,7 @@
                   (place-image
                    square1
                    1000 (+ 320 (* .5 (world-c1now w)))
-                   (empty-scene 1200 720))))))))))))
+                   (rectangle 1200 720 "solid" "black"))))))))))))
       ]
      
      [(= s 6) 
@@ -272,7 +272,7 @@
 (define (draw-song-slider w)
   (place-image
    (overlay
-    (circle 4 "solid" "black")
+    (circle 4 "solid" "blue")
     (circle 7 "solid" "green"))
    (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
    (rectangle 1000 12 "solid" "cyan")
@@ -284,8 +284,9 @@
 ;; tab drawer
 (define (tab-draw num)
   (overlay
-   (text (number->string num) 12 "gray")
-   (rectangle 50 20 "outline" "gray")))
+   (text (number->string num) 12 "red")
+   (rectangle 50 20 "outline" "gray")
+   (rectangle 50 20 200 "white")))
 
 ;; volume draw
 (define volume-dragger
@@ -412,7 +413,7 @@
 (define X_BOUNDARY13 150)
 (define X_BOUNDARY14 200)
 
-(define X_BOUNDARY15 200)
+(define X_BOUNDARY15 200) 
 (define X_BOUNDARY16 250)
 
 (define X_BOUNDARY17 300)
@@ -420,6 +421,12 @@
 ;; y Bounds for tabs are the same
 (define Y_BOUNDARY7 50)
 (define Y_BOUNDARY8 70)
+
+;; volume button bounds
+(define Volume-Icon-X1 575)
+(define Volume-Icon-X2 625)
+(define Volume-Icon-Y1 625)
+(define Volume-Icon-Y2 675)
 
 ;; next and previous button boundaries (next and previous y boundaries are the same)
 (define next-x-l (- 450 25)) ;left
@@ -531,6 +538,13 @@
        [(and (> y Y_BOUNDARY7) (< y Y_BOUNDARY8) (> x X_BOUNDARY16) (< x X_BOUNDARY17) (not (= 0 (world-scene w)))(not (= 6 (world-scene w))))
         (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 6 (world-p w) (world-cs w)
                     (world-cs-name w)(world-song-drag? w))]
+       ;; Mute
+       [(and (> y Volume-Icon-Y1) (< y Volume-Icon-Y2) (> x Volume-Icon-X1) (< x Volume-Icon-X2)(not (= (world-scene w) 0)))
+           (begin 
+             (set-box! volume-song 0)
+             (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (- 910 250) (world-drag? w) (world-scene w) 
+                         (world-p w) (world-cs w)
+                         (world-cs-name w)(world-song-drag? w)))]
        
        ;;pause
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
