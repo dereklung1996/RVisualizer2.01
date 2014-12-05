@@ -17,23 +17,31 @@
 (define SONG-LOCATION4 "songs/Looking Glass - Saturn.wav")
 (define SONG-LOCATION5 "songs/Luv Sick - Saturn.wav")
 
+;; converts a path into a rsound
 (define SONG1 (rs-read SONG-LOCATION1))
 (define SONG2 (rs-read SONG-LOCATION2))
 (define SONG3 (rs-read SONG-LOCATION3))
 (define SONG4 (rs-read SONG-LOCATION4))
 (define SONG5 (rs-read SONG-LOCATION5))
 
-;; song lengths
+;; defines the length of a song
 (define SONGLEN1 (rs-frames SONG1))
 (define SONGLEN2 (rs-frames SONG2))
 (define SONGLEN3 (rs-frames SONG3))
 (define SONGLEN4 (rs-frames SONG4))
 (define SONGLEN5 (rs-frames SONG5))
 
-;; list of rsounds to be used in later functions
+
+;; a SONG-LIST is one of
+;;-empty
+;;-(cons SONG (rest SONG-LIST))
+;; SONG is a rsound
 (define SONG-LIST  (list SONG1 SONG2 SONG3 SONG4 SONG5))
 
-;; list of rsound names to be used in later functions
+;;a SONG-NAME-LIST is one of
+;;-empty
+;;(cons SONG-LOCATION (rest SONG-NAME-LIST)
+;; SONG-LOCATION is a string
 (define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3 SONG-LOCATION4 SONG-LOCATION5))
 
 ;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound String)
@@ -123,7 +131,10 @@
 (define cur-song (box (world-cs INITIAL-WORLD)))
 ;; current song name
 (define cur-song-name (box (world-cs-name INITIAL-WORLD)))
+;; a ticker that ticks all the way to 255 starting from 0
+;; used for make-color
 (define time-ticks (box 0))
+;; used to set the position slider
 (define new-frame (box 1))
 ;; indicates if the end of the song has been reached
 (define end-song? (box false))
@@ -131,6 +142,7 @@
 (define next-song-ctr (box 10))
 ;; indicates which song change function is to be used when a song-change event occurs
 (define next/prev (box true))
+;; ???
 (define CLEMENTS (bitmap/file "img/clements.png"))
 
 ;; volume elements
@@ -149,7 +161,7 @@
 
 
 
-
+;; SOUND CODE
 
 ;; this channel will hold the events flowing from the big-bang side
 (define events (make-async-channel))
@@ -183,8 +195,9 @@
           [out = (begin
                    (set-box! cur-frame ctr)
                    (* (unbox volume-song) ; volume
-                      (rs-ith/left (unbox cur-song) ctr)))])) 
+                      (rs-ith/left (unbox cur-song) ctr)))]))
 
+;; VISUALS
 
 
 ;; Displays what the current song is playing
@@ -289,6 +302,8 @@
 
 
 ;; Creates Song Position Slider
+;; world -> scene
+;; Draws the position of the song
 (define (draw-song-slider w)
   (place-image
    (overlay
@@ -300,6 +315,8 @@
 
 
 ;; tab drawer
+;; number -> scene 
+;; takes a number and draws a tab with the number inside
 (define (tab-draw num)
   (overlay
    (text (number->string num) 12 "red")
@@ -555,6 +572,7 @@
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) (world-scene w) (world-p w) (unbox cur-song) (unbox cur-song-name)
                       (world-song-drag? w)))]
        ;; Menu Buttons
+       
        ;; Music Player Button
        [(and (> y Y_BOUNDARY1) (< y Y_BOUNDARY2) (> x X_BOUNDARY1) (< x X_BOUNDARY2) (= 0 (world-scene w))) 
         (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)  1 (world-p w) (world-cs w)
@@ -618,6 +636,7 @@
      (cond
        [(world-drag? w)
         (cond
+          ;; Changes Volume
           [(and (> x (- 910 250)) (< x (+ 890 250)) (not (= (world-scene w) 0)))
            (begin 
              (set-box! volume-song (/ (- (world-slide-h w) 660) 480))
@@ -627,6 +646,7 @@
           [else 
            (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) true (world-scene w)(world-p w) (world-cs w)
                        (world-cs-name w)(world-song-drag? w))])]
+       ;; CHanges the position of the song
        [(world-song-drag? w)
         (cond
           [(and (> x 100) (< x 1100))
