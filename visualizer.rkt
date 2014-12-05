@@ -44,8 +44,12 @@
 (define play-speed (box (world-p INITIAL-WORLD)))
 (define cur-frame (box 1))
 (define cur-song (box (world-cs INITIAL-WORLD)))
+(define cur-song-name (box (world-cs-name INITIAL-WORLD)))
 (define time-ticks (box 0))
 (define new-frame (box 1))
+(define end-song? (box false))
+(define next-song-ctr (box 10))
+(define next/prev (box true))
 
 ;; this channel will hold the events flowing from the big-bang side
 (define events (make-async-channel))
@@ -90,17 +94,30 @@
 (define (tock w)
   (begin
     (if (= (unbox time-ticks) 255)(set-box! time-ticks 0)(set-box! time-ticks (add1 (unbox time-ticks))))
+    (if (unbox end-song?)
+        (if (unbox next/prev)
+            (next-song SONG-LIST SONG-NAME-LIST (world-cs w))
+            (prev-song SONG-LIST SONG-NAME-LIST (world-cs w)))
+        0)
     (if (> (unbox ctr) 0)
         (set-box! ctr (sub1 (unbox ctr)))
-        (set-box! ctr 3)
-        )
-    (if (= (unbox ctr) 0)
-        (make-world (world-t w) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
-                    (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (world-cs w)(world-cs-name w)(world-song-drag? w))
-        
-        (make-world (world-t w) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
-                    (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (world-cs w)(world-cs-name w)(world-song-drag? w))
-        )))
+        (set-box! ctr 3))
+    (if (<= (- (rs-frames (world-cs w)) 735) (unbox cur-frame))
+        (begin
+          (async-channel-put events true)
+          (set-box! next/prev true)
+          (set-box! end-song? true)
+          (set-box! cur-frame 1)
+          (if (= (unbox ctr) 0)
+              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
+                          (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
+              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
+                          (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))
+        (if (= (unbox ctr) 0)
+            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
+                        (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
+            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
+                        (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))))
 
 ;; DRAWS SOME IMAGES
 
@@ -143,75 +160,75 @@
     15 "white")
    150 20
    (rectangle 300 40 "solid" "orange"))) 
- 
+
 ;; draws the visualizer parts of the scene
 (define (draw-visuals w s)  
   ;; debug text
   ;(overlay
-   #;(above/align "left"
-    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
-    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
-    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
-    )
-   
-   (cond
-     [(= s 1) 
+  #;(above/align "left"
+                 (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
+                 (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
+                 (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
+                 )
+  
+  (cond
+    [(= s 1) 
+     (place-image
+      (star (world-c1now w) "solid" 
+            (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
+                        (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
+                        (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
+      600 320
       (place-image
-       (star (world-c1now w) "solid" 
-             (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
-                         (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
-                         (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
-       600 320
-       (place-image
-        (star (* (world-c1now w) 1.5) "solid" 
-              (make-color 150 0 150))
+       (star (* (world-c1now w) 1.5) "solid" 
+             (make-color 150 0 150))
        600 320
        (rectangle 1200 720 "solid" "black")))
-      ]
-     
-     [(= s 3) 
+     ]
+    
+    [(= s 3) 
+     (place-image
+      (circle (* 1.5 (world-c1now w)) "outline" "green")
+      600 320
       (place-image
-       (circle (* 1.5 (world-c1now w)) "outline" "green")
+       (circle (* 1.25 (world-c1now w)) "outline" "green")
        600 320
        (place-image
-        (circle (* 1.25 (world-c1now w)) "outline" "green")
+        (circle (* 1 (world-c1now w)) "outline" "green") 
         600 320
         (place-image
-         (circle (* 1 (world-c1now w)) "outline" "green") 
+         (circle (* 0.75 (world-c1now w)) "outline" "green")
          600 320
-         (place-image
-          (circle (* 0.75 (world-c1now w)) "outline" "green")
-          600 320
-          (rectangle 1200 720 "solid" "black")))))
-      ]
-     
-     [(= s 4) 
-      (local [(define colors (make-color 
+         (rectangle 1200 720 "solid" "black")))))
+     ]
+    
+    [(= s 4) 
+     (local [(define colors (make-color 
                              0
                              252
                              (if (> 128 (unbox time-ticks))(+ 50 (unbox time-ticks)) (- 305 (unbox time-ticks)))))]
-        (place-image 
-         (underlay (ellipse (+ 10 (* 1.5 (world-c1now w))) (+ 60 (* 1.5 (world-c1now w))) 40 colors)
-                   (ellipse (+ 20 (* 1.5 (world-c1now w))) (+ 50 (* 1.5 (world-c1now w))) 40 colors)
-                   (ellipse (+ 30 (* 1.5 (world-c1now w))) (+ 40 (* 1.5 (world-c1now w))) 40 colors)
-                   (ellipse (+ 40 (* 1.5 (world-c1now w))) (+ 30 (* 1.5 (world-c1now w))) 40 colors)
-                   (ellipse (+ 50 (* 1.5 (world-c1now w))) (+ 20 (* 1.5 (world-c1now w))) 40 colors)
-                   (ellipse (+ 60 (* 1.5 (world-c1now w))) (+ 10 (* 1.5 (world-c1now w))) 40 colors))
-         600 320
-          (rectangle 1200 720 "solid" "black")))
-      ]
-     
-     [(= s 5) 
-      (place-image
-       ;(radial-star  (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) (world-c1now w) (+ 10 (world-c1now w)) "outline" "red")
-       (radial-star (+ (round (/ (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) 4)) 2 
-                       (round (/ (world-c1now w) 3))) (+ 55 (* 0.5 (world-c1now w))) (+ 60 (* 0.7 (world-c1now w))) "outline" "red")
-       600 320
-       (rectangle 1200 720 "solid" "black"))
-      ]
-     
-     [(= s 6) 
-      (local [(define square1 (square 50 "solid" "green"))]
+       (place-image 
+        (underlay (ellipse (+ 10 (* 1.5 (world-c1now w))) (+ 60 (* 1.5 (world-c1now w))) 40 colors)
+                  (ellipse (+ 20 (* 1.5 (world-c1now w))) (+ 50 (* 1.5 (world-c1now w))) 40 colors)
+                  (ellipse (+ 30 (* 1.5 (world-c1now w))) (+ 40 (* 1.5 (world-c1now w))) 40 colors)
+                  (ellipse (+ 40 (* 1.5 (world-c1now w))) (+ 30 (* 1.5 (world-c1now w))) 40 colors)
+                  (ellipse (+ 50 (* 1.5 (world-c1now w))) (+ 20 (* 1.5 (world-c1now w))) 40 colors)
+                  (ellipse (+ 60 (* 1.5 (world-c1now w))) (+ 10 (* 1.5 (world-c1now w))) 40 colors))
+        600 320
+        (rectangle 1200 720 "solid" "black")))
+     ]
+    
+    [(= s 5) 
+     (place-image
+      ;(radial-star  (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) (world-c1now w) (+ 10 (world-c1now w)) "outline" "red")
+      (radial-star (+ (round (/ (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) 4)) 2 
+                      (round (/ (world-c1now w) 3))) (+ 55 (* 0.5 (world-c1now w))) (+ 60 (* 0.7 (world-c1now w))) "outline" "red")
+      600 320
+      (rectangle 1200 720 "solid" "black"))
+     ]
+    
+    [(= s 6) 
+     (local [(define square1 (square 50 "solid" "green"))]
        (local [(define square2 (square 50 "solid" "black"))]
          (place-image 
           (circle (* 2 (world-c1now w)) "solid" "cyan")
@@ -240,8 +257,8 @@
                                             (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
                600 360
                (empty-scene 1200 720)))))))))
-      ]
-     )
+     ]
+    )
   ; )
   )
 
@@ -350,65 +367,65 @@
      (place-image
       (overlay
        (rotate (* 3 (unbox time-ticks) (/ 360 255))
-              (above
-               (text " E M O S E W A " 100 (make-color 255 76 50 255))
-               (text " A W E S O M E " 100 (make-color 50 76 255 255))))
+               (above
+                (text " E M O S E W A " 100 (make-color 255 76 50 255))
+                (text " A W E S O M E " 100 (make-color 50 76 255 255))))
        (rotate (- 1 (* 3 (unbox time-ticks)) (/ 360 255))
-              (above
-               (text " E M O S E W A " 100 (make-color 255 76 50 150))
-               (text " A W E S O M E " 100 (make-color 50 76 255 150))))
-      (rotate (- 2 (* 3 (unbox time-ticks)) (/ 360 255))
-              (above
-               (text " E M O S E W A " 100 (make-color 255 76 50 75))
-               (text " A W E S O M E " 100 (make-color 50 76 255 75))))
-              )
+               (above
+                (text " E M O S E W A " 100 (make-color 255 76 50 150))
+                (text " A W E S O M E " 100 (make-color 50 76 255 150))))
+       (rotate (- 2 (* 3 (unbox time-ticks)) (/ 360 255))
+               (above
+                (text " E M O S E W A " 100 (make-color 255 76 50 75))
+                (text " A W E S O M E " 100 (make-color 50 76 255 75))))
+       )
       600 360
       (place-image
-        return-button
-        40 30
+       return-button
+       40 30
+       (place-image
+        (scale (* 2 (random)) CLEMENTS)
+        (random 1200)
+        (random 720)
         (place-image
-         (scale (* 2 (random)) CLEMENTS)
+         (scale (* 0.6 (random)) CLEMENTS)
          (random 1200)
          (random 720)
          (place-image
-          (scale (* 0.6 (random)) CLEMENTS)
+          (scale (* 3 (random)) CLEMENTS)
           (random 1200)
           (random 720)
           (place-image
-           (scale (* 3 (random)) CLEMENTS)
-           (random 1200)
-           (random 720)
-           (place-image
            (scale (/ (+ 1 (unbox time-ticks)) 80) CLEMENTS)
            600 360
            (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 70) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 60) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 50) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 40) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 30) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 20) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 10) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 5) CLEMENTS)
-           600 360
-           (place-image
-           (scale (/ (+ 1 (unbox time-ticks)) 2) CLEMENTS)
-           600 360
-           (empty-scene 1200 720))))))))))))))))]
+            (scale (/ (+ 1 (unbox time-ticks)) 70) CLEMENTS)
+            600 360
+            (place-image
+             (scale (/ (+ 1 (unbox time-ticks)) 60) CLEMENTS)
+             600 360
+             (place-image
+              (scale (/ (+ 1 (unbox time-ticks)) 50) CLEMENTS)
+              600 360
+              (place-image
+               (scale (/ (+ 1 (unbox time-ticks)) 40) CLEMENTS)
+               600 360
+               (place-image
+                (scale (/ (+ 1 (unbox time-ticks)) 30) CLEMENTS)
+                600 360
+                (place-image
+                 (scale (/ (+ 1 (unbox time-ticks)) 20) CLEMENTS)
+                 600 360
+                 (place-image
+                  (scale (/ (+ 1 (unbox time-ticks)) 10) CLEMENTS)
+                  600 360
+                  (place-image
+                   (scale (/ (+ 1 (unbox time-ticks)) 5) CLEMENTS)
+                   600 360
+                   (place-image
+                    (scale (/ (+ 1 (unbox time-ticks)) 2) CLEMENTS)
+                    600 360
+                    (empty-scene 1200 720))))))))))))))))]
     ))  
 
 
@@ -469,22 +486,47 @@
 
 ;; next song selector
 ;; current song, song list -> next song 
-(define (next-song song-list cs)
+(define (next-song song-list name-list cs)
+  (if (= (unbox next-song-ctr) 0)
   (cond
     [(rs-equal? cs (first song-list)) 
      (cond
-       [(empty? (rest song-list)) (first SONG-LIST)]
-       [else (first (rest song-list))])]    
-    [else (next-song (rest song-list) cs)]))
+       [(empty? (rest song-list)) 
+        (begin
+          (set-box! cur-song (first SONG-LIST))
+          (set-box! cur-song-name (first SONG-NAME-LIST))
+          (set-box! end-song? false)
+          (first SONG-LIST))]
+       [else
+        (begin
+          (set-box! cur-song (first (rest song-list)))
+          (set-box! cur-song-name (first (rest name-list)))
+          (set-box! end-song? false)
+          (first (rest song-list)))])]    
+    [else
+     (next-song (rest song-list) (rest name-list) cs)])
+  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
 
 ;; previous song selector
 ;; current song, song list -> previous song
-(define (prev-song song-list cs)
+(define (prev-song song-list name-list cs)
+  (if (= (unbox next-song-ctr) 0)
   (cond
-    ;[(empty? (rest song-list)) (first (rest (reverse song-list)))]
-    [(rs-equal? cs (first (rest song-list))) (first song-list)]
-    [(rs-equal? cs (first song-list)) (first (reverse SONG-LIST))]
-    [else (prev-song (rest song-list) cs)]))
+    [(rs-equal? cs (first (rest song-list)))
+     (begin
+       (set-box! cur-song (first song-list))
+       (set-box! cur-song-name (first name-list))
+       (set-box! end-song? false)
+       (set-box! next-song-ctr 10))]
+    [(rs-equal? cs (first song-list))
+     (begin
+       (set-box! cur-song (first (reverse SONG-LIST)))
+       (set-box! cur-song-name (first (reverse SONG-NAME-LIST)))
+       (set-box! end-song? false)
+       (set-box! next-song-ctr 10))]
+    [else
+     (prev-song (rest song-list) (rest name-list) cs)])
+  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
 
 ;; functions for changing the name of the song
 
@@ -515,21 +557,21 @@
     [(mouse=? event "button-down")
      ;; prev song
      (cond
-       [(and (> y y-b) (< y y-t) (> x prev-x-l) (< x prev-x-r)(not (= (world-scene w) 0))) 
+       [(and (> y y-b) (< y y-t) (> x prev-x-l) (< x prev-x-r)(not (= (world-scene w) 0)))
         (begin
           (async-channel-put events true)
-          (set-box! cur-song (prev-song SONG-LIST (world-cs w)))
-          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 
-                      (world-scene w) (world-p w)
-                      (prev-song SONG-LIST (world-cs w)) (prev-song-name SONG-NAME-LIST (world-cs-name w))(world-song-drag? w)))]  
+          (set-box! next/prev false)
+          (set-box! end-song? true)
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) (world-scene w) (world-p w)
+                      (unbox cur-song) (unbox cur-song-name) (world-song-drag? w)))]
        ;; next song
        [(and (> y y-b) (< y y-t) (> x next-x-l) (< x next-x-r)(not (= (world-scene w) 0))) 
         (begin 
-          (async-channel-put events true) 
-          (set-box! cur-song (next-song SONG-LIST (world-cs w)))  
-          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 
-                      (world-scene w) (world-p w) 
-                      (next-song SONG-LIST (world-cs w)) (next-song-name SONG-NAME-LIST (world-cs-name w))(world-song-drag? w)))]
+          (async-channel-put events true)
+          (set-box! next/prev true)
+          (set-box! end-song? true)
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) (world-scene w) (world-p w) (unbox cur-song) (unbox cur-song-name)
+                      (world-song-drag? w)))]
        ;; Menu Buttons
        ;; Music Player Button
        [(and (> y Y_BOUNDARY1) (< y Y_BOUNDARY2) (> x X_BOUNDARY1) (< x X_BOUNDARY2) (= 0 (world-scene w))) 
@@ -568,11 +610,11 @@
                     (world-cs-name w)(world-song-drag? w))]
        ;; Mute
        [(and (> y Volume-Icon-Y1) (< y Volume-Icon-Y2) (> x Volume-Icon-X1) (< x Volume-Icon-X2)(not (= (world-scene w) 0)))
-           (begin 
-             (set-box! volume-song 0)
-             (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (- 910 250) (world-drag? w) (world-scene w) 
-                         (world-p w) (world-cs w)
-                         (world-cs-name w)(world-song-drag? w)))]
+        (begin 
+          (set-box! volume-song 0)
+          (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (- 910 250) (world-drag? w) (world-scene w) 
+                      (world-p w) (world-cs w)
+                      (world-cs-name w)(world-song-drag? w)))]
        
        ;;pause
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
