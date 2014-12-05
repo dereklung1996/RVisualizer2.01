@@ -228,6 +228,7 @@
                  (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white"))
   (cond
     [(= s 1) 
+     ;; draw the "star" visualizer
      (place-image
       (star (world-c1now w) "solid" 
             (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
@@ -240,6 +241,7 @@
        600 320
        (rectangle 1200 720 "solid" "black")))]
     [(= s 3) 
+     ;; draw the "green circles" visualizer
      (place-image
       (circle (* 1.5 (world-c1now w)) "outline" "green")
       600 320
@@ -254,6 +256,7 @@
          600 320
          (rectangle 1200 720 "solid" "black")))))]
     [(= s 4) 
+     ;; draw the "flower" visualizer
      (local [(define colors (make-color 
                              0
                              252
@@ -268,13 +271,14 @@
         600 320
         (rectangle 1200 720 "solid" "black")))]
     [(= s 5) 
+     ;; draw the "radial star" visualizer
      (place-image
-      ;(radial-star  (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) (world-c1now w) (+ 10 (world-c1now w)) "outline" "red")
       (radial-star (+ (round (/ (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) 4)) 2 
                       (round (/ (world-c1now w) 3))) (+ 55 (* 0.5 (world-c1now w))) (+ 60 (* 0.7 (world-c1now w))) "outline" "red")
       600 320
       (rectangle 1200 720 "solid" "black"))]
     [(= s 6) 
+     ;; draw the "random circles" visualizer
      (local [(define square1 (square 50 "solid" "green"))]
        (local [(define square2 (square 50 "solid" "black"))]
          (place-image 
@@ -299,8 +303,6 @@
   ; )
   )
 
-
-
 ;; Creates Song Position Slider
 ;; world -> scene
 ;; Draws the position of the song
@@ -311,8 +313,6 @@
     (circle 7 "solid" "green"))
    (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
    (rectangle 1000 12 "solid" "cyan")))
-
-
 
 ;; tab drawer
 ;; number -> scene 
@@ -358,6 +358,7 @@
 
 ;(check-expect (next-song SONG-LIST SONG-NAME-LIST SONG1) 0)
 
+
 ;; previous song selector
 ;; current song, song list, name-list -> previous song, 0
 ;; operates the same way as next-song
@@ -385,18 +386,19 @@
 ;(check-expect (prev-song SONG-LIST SONG-NAME-LIST SONG1) 0)
 
 
-
 ;; Draws the scene 
 ;; world -> world 
 (define (draw w)
   (cond
     [(= (world-scene w) 0)
+     ;; draw the main menu
      (place-image STRT-BUTTON 600 350
                   (place-image AWESOME-BUTTON 600 450
                                (place-image R-LOGO 600 200
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
     [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5) (= (world-scene w) 6))
+     ;; draw the background elements and main interface
      (place-image
       (draw-song-slider w)
       600 550
@@ -446,10 +448,12 @@
                      background-visuals
                      600 360
                      (place-image
+                      ;; draws the visuals depending on the scene
                       (draw-visuals w (world-scene w))
                       600 360
                       (empty-scene 1200 720))))))))))))))))))]
     [(= (world-scene w) 2)
+     ;; draw the secret scene
      (place-image
       (overlay
        (rotate (* 3 (unbox time-ticks) (/ 360 255))
