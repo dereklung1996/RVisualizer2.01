@@ -34,12 +34,87 @@
 (define SONG-LIST  (list SONG1 SONG2 SONG3 SONG4 SONG5))
 (define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3 SONG-LOCATION4 SONG-LOCATION5))
 
-(define-struct world[t a c1now c1go slide-h drag? scene p cs cs-name song-drag?])
 ;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound String)
+(define-struct world[t a c1now c1go slide-h drag? scene p cs cs-name song-drag?])
 
-
-
+;; initial world
 (define INITIAL-WORLD (make-world 0 0 300 300 1100 false 0 0 SONG1 SONG-LOCATION1 false))
+
+;; Visuals
+(define R-LOGO (scale/xy 2 2 (bitmap/file "img/logo.png")))
+(define BACKGROUND-IMG (scale/xy 1.5 1.5 (bitmap/file "img/bg1.png")))
+
+;; defines play and pause buttons
+(define play-button (bitmap/file "img/play-button.png"))
+(define pause-button (bitmap/file "img/pause-button.png"))
+
+;; Menu Buttons
+(define STRT-BUTTON 
+  (overlay
+   (text "Visualizer" 24 "green")
+   (bitmap/file "img/sample-button.png")))
+(define AWESOME-BUTTON 
+  (overlay
+   (text "???" 24 "green")
+   (bitmap/file "img/sample-button.png")))
+(define return-button
+  (overlay
+   (text "return" 10 "red")
+   (rectangle 30 20 "solid" "cyan")
+   (rectangle 35 25 "solid" "blue")))
+
+;; Next and Previous Song Buttons
+(define NXT-SNG (bitmap/file "img/next-button.png"))
+(define PREV-SNG (rotate 180 (bitmap/file "img/next-button.png")))
+
+;; Create bg for visualizer
+(define background-visuals (bitmap/file "img/bg2-1.png"))
+
+;bounds of buttons on menu screen
+(define X_BOUNDARY1 500)
+(define X_BOUNDARY2 700)
+(define Y_BOUNDARY1 330)
+(define Y_BOUNDARY2 380)
+(define X_BOUNDARY3 500)
+(define X_BOUNDARY4 700)
+(define Y_BOUNDARY3 420)
+(define Y_BOUNDARY4 480)
+(define X_BOUNDARY5 25)
+(define X_BOUNDARY6 55)
+(define Y_BOUNDARY5 20)
+(define Y_BOUNDARY6 30)
+
+;; bounds of the tabs for selecting the visuals
+(define X_BOUNDARY7 50)
+(define X_BOUNDARY8 100)
+(define X_BOUNDARY9 100)
+(define X_BOUNDARY10 150)
+(define X_BOUNDARY11 100)
+(define X_BOUNDARY12 150)
+(define X_BOUNDARY13 150)
+(define X_BOUNDARY14 200)
+(define X_BOUNDARY15 200) 
+(define X_BOUNDARY16 250)
+(define X_BOUNDARY17 300)
+
+;; y Bounds for tabs are the same
+(define Y_BOUNDARY7 50)
+(define Y_BOUNDARY8 70)
+
+;; volume button bounds
+(define Volume-Icon-X1 575)
+(define Volume-Icon-X2 625)
+(define Volume-Icon-Y1 625)
+(define Volume-Icon-Y2 675)
+
+;; next and previous button boundaries (next and previous y boundaries are the same)
+(define next-x-l (- 450 25)) ;left
+(define next-x-r (+ 450 25)) ;right
+(define prev-x-l (- 350 30))
+(define prev-x-r (+ 350 30))
+(define y-t (+ 650 10)) ;top
+(define y-b (- 650 10)) ;bottom
+
 
 (define volume-song (box 1))
 (define ctr (box 5))
@@ -53,6 +128,19 @@
 (define next-song-ctr (box 10))
 (define next/prev (box true))
 
+(define CLEMENTS (bitmap/file "img/clements.png"))
+
+;; volume draw
+(define volume-dragger
+  (overlay
+   (square 15 "solid" "cyan")
+   (square 20 "solid" "white")))
+
+(define volume-bar
+  (rectangle 500 20 "solid" "black"))
+
+(define volume-icon (bitmap/file "img/volume-icon.png"))
+
 ;; this channel will hold the events flowing from the big-bang side
 (define events (make-async-channel))
 (define song-events (make-async-channel))
@@ -60,7 +148,6 @@
 ;; only check for events every 1/100 of a second. Otherwise
 ;; we won't get any sound generated.
 (define EVENT-CHECK-INTERVAL 441)
-
 
 ;; reset the value to zero if an event occurs
 (define (maybe-reset-ctr ctr)
@@ -86,72 +173,7 @@
           [out = (begin
                    (set-box! cur-frame ctr)
                    (* (unbox volume-song) ; volume
-                      (rs-ith/left (unbox cur-song) ctr)))]  
-          )) 
-
-;; CREATES VISUALS
-;; world -> world
-;; on tick, take the sample of a song 
-;; and use it create the radius of our visuals
-(define (tock w)
-  (begin
-    (if (= (unbox time-ticks) 255)(set-box! time-ticks 0)(set-box! time-ticks (add1 (unbox time-ticks))))
-    (if (unbox end-song?)
-        (if (unbox next/prev)
-            (next-song SONG-LIST SONG-NAME-LIST (world-cs w))
-            (prev-song SONG-LIST SONG-NAME-LIST (world-cs w)))
-        0)
-    (if (> (unbox ctr) 0)
-        (set-box! ctr (sub1 (unbox ctr)))
-        (set-box! ctr 3))
-    (if (<= (- (rs-frames (world-cs w)) 735) (unbox cur-frame))
-        (begin
-          (async-channel-put events true)
-          (set-box! next/prev true)
-          (set-box! end-song? true)
-          (set-box! cur-frame 1)
-          (if (= (unbox ctr) 0)
-              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
-                          (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
-              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
-                          (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))
-        (if (= (unbox ctr) 0)
-            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
-                        (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
-            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
-                        (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))))
-
-;; DRAWS SOME IMAGES
-
-;; defines play and pause buttons
-
-(define play-button (bitmap/file "img/play-button.png"))
-(define pause-button (bitmap/file "img/pause-button.png"))
-
-;; Visuals
-(define R-LOGO (scale/xy 2 2 (bitmap/file "img/logo.png")))
-(define BACKGROUND-IMG (scale/xy 1.5 1.5 (bitmap/file "img/bg1.png")))
-
-;; Menu Buttons
-(define STRT-BUTTON 
-  (overlay
-   (text "Visualizer" 24 "green")
-   (bitmap/file "img/sample-button.png")))
-(define AWESOME-BUTTON 
-  (overlay
-   (text "???" 24 "green")
-   (bitmap/file "img/sample-button.png")))
-(define return-button
-  (overlay
-   (text "return" 10 "red")
-   (rectangle 30 20 "solid" "cyan")
-   (rectangle 35 25 "solid" "blue")))
-;; Next and Previous Song Buttons
-
-(define NXT-SNG (bitmap/file "img/next-button.png"))
-(define PREV-SNG (rotate 180 (bitmap/file "img/next-button.png")))
-
-(define CLEMENTS (bitmap/file "img/clements.png"))
+                      (rs-ith/left (unbox cur-song) ctr)))])) 
 
 ;; Displays what the current song is playing
 (define (NOWPLAYING w)
@@ -170,9 +192,7 @@
   #;(above/align "left"
                  (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
                  (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
-                 (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
-                 )
-  
+                 (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white"))
   (cond
     [(= s 1) 
      (place-image
@@ -185,9 +205,7 @@
        (star (* (world-c1now w) 1.5) "solid" 
              (make-color 150 0 150))
        600 320
-       (rectangle 1200 720 "solid" "black")))
-     ]
-    
+       (rectangle 1200 720 "solid" "black")))]
     [(= s 3) 
      (place-image
       (circle (* 1.5 (world-c1now w)) "outline" "green")
@@ -201,9 +219,7 @@
         (place-image
          (circle (* 0.75 (world-c1now w)) "outline" "green")
          600 320
-         (rectangle 1200 720 "solid" "black")))))
-     ]
-    
+         (rectangle 1200 720 "solid" "black")))))]
     [(= s 4) 
      (local [(define colors (make-color 
                              0
@@ -217,50 +233,38 @@
                   (ellipse (+ 50 (* 1.5 (world-c1now w))) (+ 20 (* 1.5 (world-c1now w))) 40 colors)
                   (ellipse (+ 60 (* 1.5 (world-c1now w))) (+ 10 (* 1.5 (world-c1now w))) 40 colors))
         600 320
-        (rectangle 1200 720 "solid" "black")))
-     ]
-    
+        (rectangle 1200 720 "solid" "black")))]
     [(= s 5) 
      (place-image
       ;(radial-star  (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) (world-c1now w) (+ 10 (world-c1now w)) "outline" "red")
       (radial-star (+ (round (/ (if (> 128 (unbox time-ticks))(+ 2 (unbox time-ticks))(- 257 (unbox time-ticks))) 4)) 2 
                       (round (/ (world-c1now w) 3))) (+ 55 (* 0.5 (world-c1now w))) (+ 60 (* 0.7 (world-c1now w))) "outline" "red")
       600 320
-      (rectangle 1200 720 "solid" "black"))
-     ]
-    
+      (rectangle 1200 720 "solid" "black"))]
     [(= s 6) 
      (local [(define square1 (square 50 "solid" "green"))]
        (local [(define square2 (square 50 "solid" "black"))]
          (place-image 
           (circle (* 2 (world-c1now w)) "solid" "cyan")
           (+ 50 (random 1100)) (+ 70 (random 500))
-          
           (place-image
            (circle (* .5 (world-c1now w)) "solid" "black")
            (+ 50 (random 1100)) (+ 70 (random 500))
-           
            (place-image
             (circle (* .5 (world-c1now w)) "solid" "darkslategray")
             (+ 50 (random 1100)) (+ 70 (random 500))
-            
             (place-image
              (circle (* 1.5 (world-c1now w)) "solid" "black")
              (+ 50 (random 1100)) (+ 70 (random 500))
-             
-           
               (place-image
                (rectangle 1200 720 "solid" (make-color 
                                             (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
                                             (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
                                             (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
                600 360
-               (empty-scene 1200 720))))))))
-     ]
-    )
+               (empty-scene 1200 720))))))))])
   ; )
   )
-
 
 ;; Creates Song Position Slider
 (define (draw-song-slider w)
@@ -269,11 +273,7 @@
     (circle 4 "solid" "blue")
     (circle 7 "solid" "green"))
    (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
-   (rectangle 1000 12 "solid" "cyan")
-   ))
-
-;; Create bg for visualizer
-(define background-visuals (bitmap/file "img/bg2-1.png"))
+   (rectangle 1000 12 "solid" "cyan")))
 
 ;; tab drawer
 (define (tab-draw num)
@@ -282,18 +282,49 @@
    (rectangle 50 20 "outline" "gray")
    (rectangle 50 20 200 "white")))
 
-;; volume draw
-(define volume-dragger
-  (overlay
-   (square 15 "solid" "cyan")
-   (square 20 "solid" "white")
-   ))
+;; next song selector
+;; current song, song list, name-list -> next song 
+(define (next-song song-list name-list cs)
+  (if (= (unbox next-song-ctr) 0)
+  (cond
+    [(rs-equal? cs (first song-list)) 
+     (cond
+       [(empty? (rest song-list)) 
+        (begin
+          (set-box! cur-song (first SONG-LIST))
+          (set-box! cur-song-name (first SONG-NAME-LIST))
+          (set-box! end-song? false)
+          (first SONG-LIST))]
+       [else
+        (begin
+          (set-box! cur-song (first (rest song-list)))
+          (set-box! cur-song-name (first (rest name-list)))
+          (set-box! end-song? false)
+          (first (rest song-list)))])]    
+    [else
+     (next-song (rest song-list) (rest name-list) cs)])
+  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
 
-(define volume-bar
-  (rectangle 500 20 "solid" "black"))
-
-(define volume-icon (bitmap/file "img/volume-icon.png"))
-
+;; previous song selector
+;; current song, song list, name-list -> previous song
+(define (prev-song song-list name-list cs)
+  (if (= (unbox next-song-ctr) 0)
+  (cond
+    [(rs-equal? cs (first (rest song-list)))
+     (begin
+       (set-box! cur-song (first song-list))
+       (set-box! cur-song-name (first name-list))
+       (set-box! end-song? false)
+       (set-box! next-song-ctr 10))]
+    [(rs-equal? cs (first song-list))
+     (begin
+       (set-box! cur-song (first (reverse SONG-LIST)))
+       (set-box! cur-song-name (first (reverse SONG-NAME-LIST)))
+       (set-box! end-song? false)
+       (set-box! next-song-ctr 10))]
+    [else
+     (prev-song (rest song-list) (rest name-list) cs)])
+  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
 
 
 ;; Draws the scene 
@@ -306,7 +337,6 @@
                                (place-image R-LOGO 600 200
                                             (place-image BACKGROUND-IMG 600 360
                                                          (empty-scene 1200 720)))))]
-    
     [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5) (= (world-scene w) 6))
      (place-image
       (draw-song-slider w)
@@ -359,9 +389,7 @@
                      (place-image
                       (draw-visuals w (world-scene w))
                       600 360
-                      (empty-scene 1200 720))))))))))))))))))
-     ]
-    
+                      (empty-scene 1200 720))))))))))))))))))]
     [(= (world-scene w) 2)
      (place-image
       (overlay
@@ -376,8 +404,7 @@
        (rotate (- 2 (* 3 (unbox time-ticks)) (/ 360 255))
                (above
                 (text " E M O S E W A " 100 (make-color 255 76 50 75))
-                (text " A W E S O M E " 100 (make-color 50 76 255 75))))
-       )
+                (text " A W E S O M E " 100 (make-color 50 76 255 75)))))
       600 360
       (place-image
        return-button
@@ -424,129 +451,40 @@
                    (place-image
                     (scale (/ (+ 1 (unbox time-ticks)) 2) CLEMENTS)
                     600 360
-                    (empty-scene 1200 720))))))))))))))))]
-    ))  
+                    (empty-scene 1200 720))))))))))))))))]))
 
 
-;bounds of buttons on menu screen
-(define X_BOUNDARY1 500)
-(define X_BOUNDARY2 700)
-(define Y_BOUNDARY1 330)
-(define Y_BOUNDARY2 380)
-
-(define X_BOUNDARY3 500)
-(define X_BOUNDARY4 700)
-(define Y_BOUNDARY3 420)
-(define Y_BOUNDARY4 480)
-
-(define X_BOUNDARY5 25)
-(define X_BOUNDARY6 55)
-(define Y_BOUNDARY5 20)
-(define Y_BOUNDARY6 30)
-
-;; bounds of the tabs for selecting the visuals
-(define X_BOUNDARY7 50)
-(define X_BOUNDARY8 100)
-
-(define X_BOUNDARY9 100)
-(define X_BOUNDARY10 150)
-
-(define X_BOUNDARY11 100)
-(define X_BOUNDARY12 150)
-
-(define X_BOUNDARY13 150)
-(define X_BOUNDARY14 200)
-
-(define X_BOUNDARY15 200) 
-(define X_BOUNDARY16 250)
-
-(define X_BOUNDARY17 300)
-
-;; y Bounds for tabs are the same
-(define Y_BOUNDARY7 50)
-(define Y_BOUNDARY8 70)
-
-;; volume button bounds
-(define Volume-Icon-X1 575)
-(define Volume-Icon-X2 625)
-(define Volume-Icon-Y1 625)
-(define Volume-Icon-Y2 675)
-
-;; next and previous button boundaries (next and previous y boundaries are the same)
-(define next-x-l (- 450 25)) ;left
-(define next-x-r (+ 450 25)) ;right
-(define prev-x-l (- 350 30))
-(define prev-x-r (+ 350 30))
-(define y-t (+ 650 10)) ;top
-(define y-b (- 650 10)) ;bottom
-
-
-;; function for changing songs
-
-;; next song selector
-;; current song, song list -> next song 
-(define (next-song song-list name-list cs)
-  (if (= (unbox next-song-ctr) 0)
-  (cond
-    [(rs-equal? cs (first song-list)) 
-     (cond
-       [(empty? (rest song-list)) 
+;; CREATES VISUALS
+;; world -> world
+;; on tick, take the sample of a song 
+;; and use it create the radius of our visuals
+(define (tock w)
+  (begin
+    (if (= (unbox time-ticks) 255)(set-box! time-ticks 0)(set-box! time-ticks (add1 (unbox time-ticks))))
+    (if (unbox end-song?)
+        (if (unbox next/prev)
+            (next-song SONG-LIST SONG-NAME-LIST (world-cs w))
+            (prev-song SONG-LIST SONG-NAME-LIST (world-cs w)))
+        0)
+    (if (> (unbox ctr) 0)
+        (set-box! ctr (sub1 (unbox ctr)))
+        (set-box! ctr 3))
+    (if (<= (- (rs-frames (world-cs w)) 735) (unbox cur-frame))
         (begin
-          (set-box! cur-song (first SONG-LIST))
-          (set-box! cur-song-name (first SONG-NAME-LIST))
-          (set-box! end-song? false)
-          (first SONG-LIST))]
-       [else
-        (begin
-          (set-box! cur-song (first (rest song-list)))
-          (set-box! cur-song-name (first (rest name-list)))
-          (set-box! end-song? false)
-          (first (rest song-list)))])]    
-    [else
-     (next-song (rest song-list) (rest name-list) cs)])
-  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
-
-;; previous song selector
-;; current song, song list -> previous song
-(define (prev-song song-list name-list cs)
-  (if (= (unbox next-song-ctr) 0)
-  (cond
-    [(rs-equal? cs (first (rest song-list)))
-     (begin
-       (set-box! cur-song (first song-list))
-       (set-box! cur-song-name (first name-list))
-       (set-box! end-song? false)
-       (set-box! next-song-ctr 10))]
-    [(rs-equal? cs (first song-list))
-     (begin
-       (set-box! cur-song (first (reverse SONG-LIST)))
-       (set-box! cur-song-name (first (reverse SONG-NAME-LIST)))
-       (set-box! end-song? false)
-       (set-box! next-song-ctr 10))]
-    [else
-     (prev-song (rest song-list) (rest name-list) cs)])
-  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
-
-;; functions for changing the name of the song
-
-;; next song-name selector
-;; current song, song list -> next song
-(define (next-song-name song-list cs-name) 
-  (cond
-    [(string=? cs-name (first song-list))
-     (cond
-       [(empty? (rest song-list)) (first SONG-NAME-LIST)]
-       [else (first (rest song-list))])]    
-    [else (next-song-name (rest song-list) cs-name)]))
-
-;; previous song-name selector
-;; current song, song list -> previous song
-(define (prev-song-name song-list cs-name)
-  (cond
-    ;[(empty? (rest song-list)) (first (rest (reverse song-list)))]
-    [(string=? cs-name (first (rest song-list))) (first song-list)]
-    [(string=? cs-name (first song-list)) (first (reverse SONG-NAME-LIST))]
-    [else (prev-song-name (rest song-list) cs-name)]))
+          (async-channel-put events true)
+          (set-box! next/prev true)
+          (set-box! end-song? true)
+          (set-box! cur-frame 1)
+          (if (= (unbox ctr) 0)
+              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
+                          (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
+              (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
+                          (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))
+        (if (= (unbox ctr) 0)
+            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (+ 35 (* 150 (rs-ith/left (unbox cur-song) (unbox cur-frame))))
+                        (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
+            (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
+                        (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))))
 
 ;; Mouse Events
 ;; World X-coord Y-coord Mouse-Event -> World 
@@ -614,7 +552,6 @@
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (- 910 250) (world-drag? w) (world-scene w) 
                       (world-p w) (world-cs w)
                       (world-cs-name w)(world-song-drag? w)))]
-       
        ;;pause
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
         (begin 
@@ -631,8 +568,7 @@
     ;; makes drag? false when button is not held down
     [(mouse=? event "button-up")
      (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) false (world-scene w)(world-p w) (world-cs w)
-                 (world-cs-name w) false)
-     ] 
+                 (world-cs-name w) false)] 
     [(mouse=? event "drag")
      (cond
        [(world-drag? w)
@@ -642,12 +578,10 @@
              (set-box! volume-song (/ (- (world-slide-h w) 660) 480))
              (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) x true (world-scene w) 
                          (world-p w) (world-cs w)
-                         (world-cs-name w)(world-song-drag? w))) 
-           ]
+                         (world-cs-name w)(world-song-drag? w)))]
           [else 
            (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) true (world-scene w)(world-p w) (world-cs w)
-                       (world-cs-name w)(world-song-drag? w))]
-          )]
+                       (world-cs-name w)(world-song-drag? w))])]
        [(world-song-drag? w)
         (cond
           [(and (> x 100) (< x 1100))
@@ -656,8 +590,7 @@
              (async-channel-put song-events true)
              (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) (world-scene w) 
                          (world-p w) (world-cs w)
-                         (world-cs-name w) true))
-           ]
+                         (world-cs-name w) true))]
           [else 
            (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) true (world-scene w)(world-p w) (world-cs w)
                        (world-cs-name w)(world-song-drag? w))])]
@@ -672,12 +605,10 @@
                                                           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w)
                                                                       (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (world-cs w)
                                                                       (world-cs-name w) true)]
-          [else w])])
-     ]
+          [else w])])]
     [else w]))
 
 (big-bang INITIAL-WORLD 
           [on-tick tock 1/60]
           [to-draw draw]
-          [on-mouse mouse-event]
-          )
+          [on-mouse mouse-event])
