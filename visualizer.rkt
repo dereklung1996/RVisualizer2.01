@@ -16,11 +16,11 @@
 (define SONG-LOCATION4 "songs/Looking Glass.wav")
 (define SONG-LOCATION5 "songs/Luv Sick.wav")
 
-(define SONG1 (rs-read/clip SONG-LOCATION1 0 (rs-frames (rs-read SONG-LOCATION1)))) 
-(define SONG2 (rs-read/clip SONG-LOCATION2 0 (rs-frames (rs-read SONG-LOCATION2))))
-(define SONG3 (rs-read/clip SONG-LOCATION3 0 (rs-frames (rs-read SONG-LOCATION3))))
-(define SONG4 (rs-read/clip SONG-LOCATION4 0 (rs-frames (rs-read SONG-LOCATION4))))
-(define SONG5 (rs-read/clip SONG-LOCATION5 0 (rs-frames (rs-read SONG-LOCATION5))))
+(define SONG1 (rs-read SONG-LOCATION1))
+(define SONG2 (rs-read SONG-LOCATION2))
+(define SONG3 (rs-read SONG-LOCATION3))
+(define SONG4 (rs-read SONG-LOCATION4))
+(define SONG5 (rs-read SONG-LOCATION5))
 
 
 (define SONGLEN1 (rs-frames SONG1))
@@ -124,7 +124,7 @@
    (bitmap/file "img/sample-button.png")))
 (define return-button
   (overlay
-   (text "return" 12 "white")
+   (text "return" 10 "red")
    (rectangle 30 20 "solid" "cyan")
    (rectangle 35 25 "solid" "blue")))
 ;; Next and Previous Song Buttons
@@ -141,270 +141,67 @@
     15 "white")
    150 20
    (rectangle 300 40 "solid" "orange"))) 
-
-;; draws some background colors and adds some debugging information.
-(define (draw-visuals w)  
-  (above
-   (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "black")
-   (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "black")
-   (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "black")
-   ))
-
-
-;; Creates Song Position Slider
-(define (draw-song-slider w)
-  (place-image
-   (overlay
-    (circle 4 "solid" "black")
-    (circle 7 "solid" "green"))
-   (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
-   (rectangle 1000 12 "solid" "cyan")
-   ))
-
-;; Create bg for visualizer
-(define background-visuals (bitmap/file "img/bg2-1.png"))
-
-;; tab drawer
-(define (tab-draw num)
+ 
+;; draws the visualizer parts of the scene
+(define (draw-visuals w s)  
+  ;; debug text
   (overlay
-   (text (number->string num) 12 "gray")
-   (rectangle 50 20 "outline" "gray")))
-
-;; volume draw
-(define volume-dragger
-  (overlay
-   (square 15 "solid" "cyan")
-   (square 20 "solid" "white")
-   ))
-
-(define volume-bar
-  (rectangle 500 20 "solid" "black"))
-
-(define volume-icon (bitmap/file "img/volume-icon.png"))
-
-
-
-;; Draws the scene 
-;; world -> world 
-(define (draw w)
-  (cond
-    
-    [(= (world-scene w) 0)
-     (place-image STRT-BUTTON 600 350
-                  (place-image AWESOME-BUTTON 600 450
-                               (place-image R-LOGO 600 200
-                                            (place-image BACKGROUND-IMG 600 360
-                                                         (empty-scene 1200 720)))))]
-    [(= (world-scene w) 1)
-     (place-image
-      (draw-song-slider w)
-      600 550
+   (above/align "left"
+    (text (string-append "cur-frame: " (number->string (unbox cur-frame))) 20 "white")
+    (text (string-append "world-c1now:  " (number->string (world-c1now w))) 20 "white")
+    (text (string-append "Color:  " (number->string (unbox time-ticks))) 20 "white")
+    )
+   
+   (cond
+     [(= s 1) 
       (place-image
        (star (world-c1now w) "solid" 
              (make-color (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
                          (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
-                         (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks))))) 
+                         (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
        600 320
        (place-image
         (star (* (world-c1now w) 1.5) "solid" 
-              (make-color 150 0 150)) 
-        600 320
-        (place-image
-         volume-dragger
-         (world-slide-h w) 650
-         
-         (place-image
-          play-button
-          100 650
-          (place-image
-           pause-button
-           200 650
-           (place-image
-            volume-icon
-            600 650
-           (place-image
-            volume-bar
-            900 650
-            (place-image
-             return-button
-             40 30
-             (place-image 
-              NXT-SNG
-              450 650
-              (place-image
-               PREV-SNG
-               350 650
-               (place-image
-                (tab-draw 1)
-                75 60
-                (place-image
-                 (tab-draw 2)
-                 125 60
-                 (place-image
-                  (tab-draw 3)
-                  175 60
-                  (place-image
-                   (tab-draw 4)
-                   225 60
-                   (place-image
-                    (draw-visuals w)
-                    600 310
-                    (place-image
-                     (NOWPLAYING w)
-                     600 500
-                     (place-image
-                      background-visuals
-                      600 360
-                      (empty-scene 1200 720)))))))))))))))))))]
-    
-    [(= (world-scene w) 2)
-     (place-image
-      (above
-       (text " E M O S E W A " 34 "red")
-       (text " A W E S O M E " 34 "blue"))
-      600 360
-      (place-image
-       (ellipse 500 150 200 "gray")
-       600 360
-       (place-image
-        return-button
-        40 30
-        (empty-scene 1200 720))))]
-
-    
-    [(= (world-scene w) 3)
-     (place-image
-      (draw-song-slider w)
-      600 550
-      (place-image
-       (circle (world-c1now w) "outline" "green")
+              (make-color 150 0 150))
        600 320
-       (place-image
-        (circle (* 1.3 (world-c1now w)) "outline" "green")
-        600 320
-        (place-image
-         (circle (* 0.9 (world-c1now w)) "outline" "green")
-         600 320
-         (place-image
-          (circle (* 0.5 (world-c1now w)) "outline" "green")
-          600 320
-          (place-image
-           volume-dragger
-           (world-slide-h w) 650
-           (place-image
-            play-button
-            100 650
-            (place-image
-             pause-button
-             200 650
-             (place-image
-            volume-icon
-            600 650
-             (place-image
-              volume-bar
-              900 650
-              (place-image
-               return-button
-               40 30
-               (place-image
-                NXT-SNG
-                450 650
-                (place-image
-                 PREV-SNG
-                 350 650 
-                 (place-image
-                  (tab-draw 1)
-                  75 60
-                  (place-image
-                   (tab-draw 2)
-                   125 60
-                   (place-image
-                    (tab-draw 3)
-                    175 60
-                    (place-image
-                     (tab-draw 4)
-                     225 60
-                     (place-image
-                      (draw-visuals w)
-                      600 310
-                      (place-image
-                       (NOWPLAYING w)
-                       600 500
-                       (place-image
-                        background-visuals
-                        600 360
-                        (empty-scene 1200 720)))))))))))))))))))))] 
-    
-    [(= (world-scene w) 4)
-     (place-image
-      (draw-song-slider w)
-      600 550
-      (place-image
-       (circle (* 0.25 (world-c1now w)) "solid" "red")
-       600 320
-       (place-image
-        (circle (* 0.50 (world-c1now w)) "solid" "blue")
-        600 320
-        (place-image
-         (circle (* 0.75 (world-c1now w)) "solid" "green")
-         600 320
-         (place-image
-          (circle (* 1.00 (world-c1now w)) "solid" "orange")
-          600 320
-          (place-image
-           volume-dragger
-           (world-slide-h w) 650
-           (place-image
-            play-button
-            100 650
-            (place-image
-             pause-button
-             200 650
-             (place-image
-            volume-icon
-            600 650
-             (place-image
-              volume-bar
-              900 650
-              (place-image
-               return-button
-               40 30
-               (place-image
-                NXT-SNG
-                450 650
-                (place-image
-                 PREV-SNG
-                 350 650 
-                 (place-image
-                  (tab-draw 1)
-                  75 60
-                  (place-image
-                   (tab-draw 2)
-                   125 60
-                   (place-image
-                    (tab-draw 3)
-                    175 60
-                    (place-image
-                     (tab-draw 4)
-                     225 60
-                     (place-image
-                      (draw-visuals w)
-                      600 310
-                      (place-image 
-                       (NOWPLAYING w)
-                       600 500
-                       (place-image
-                        background-visuals
-                        600 360
-                        (empty-scene 1200 720)))))))))))))))))))))]
-    
-    [(= (world-scene w) 5)
+       (rectangle 1200 720 "solid" "black")))
+      ]
      
-     (local [(define square1 (square 50 "solid" "green"))]
-       (local [(define square2 (square 50 "solid" "black"))]
+     [(= s 3) 
+      (place-image
+       (circle (* 1.5 (world-c1now w)) "outline" "green")
+       600 320
+       (place-image
+        (circle (* 1.25 (world-c1now w)) "outline" "green")
+        600 320
+        (place-image
+         (circle (* 1 (world-c1now w)) "outline" "green") 
+         600 320
          (place-image
-          (draw-song-slider w)
-          600 550
+          (circle (* 0.75 (world-c1now w)) "outline" "green")
+          600 320
+          (rectangle 1200 720 "solid" "black")))))
+      ]
+     
+     [(= s 4) 
+      (local [(define colors (make-color 
+                             0
+                             252
+                             (if (> 128 (unbox time-ticks))(+ 50 (unbox time-ticks)) (- 305 (unbox time-ticks)))))]
+        (place-image 
+         (underlay (ellipse (+ 10 (* 1.5 (world-c1now w))) (+ 60 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 20 (* 1.5 (world-c1now w))) (+ 50 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 30 (* 1.5 (world-c1now w))) (+ 40 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 40 (* 1.5 (world-c1now w))) (+ 30 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 50 (* 1.5 (world-c1now w))) (+ 20 (* 1.5 (world-c1now w))) 40 colors)
+                   (ellipse (+ 60 (* 1.5 (world-c1now w))) (+ 10 (* 1.5 (world-c1now w))) 40 colors))
+         600 320
+          (rectangle 1200 720 "solid" "black")))
+      ]
+     
+     [(= s 5) 
+      (local [(define square1 (square 50 "solid" "green"))]
+       (local [(define square2 (square 50 "solid" "black"))]
           (place-image
            square1
            200 (+ 320 (* .5 (world-c1now w)))
@@ -432,52 +229,125 @@
                   (place-image
                    square1
                    1000 (+ 320 (* .5 (world-c1now w)))
+                   (rectangle 1200 720 "solid" "black"))))))))))))
+      ]
+     )
+   
+   )
+  )
+
+
+;; Creates Song Position Slider
+(define (draw-song-slider w)
+  (place-image
+   (overlay
+    (circle 4 "solid" "blue")
+    (circle 7 "solid" "green"))
+   (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
+   (rectangle 1000 12 "solid" "cyan")
+   ))
+
+;; Create bg for visualizer
+(define background-visuals (bitmap/file "img/bg2-1.png"))
+
+;; tab drawer
+(define (tab-draw num)
+  (overlay
+   (text (number->string num) 12 "red")
+   (rectangle 50 20 "outline" "gray")
+   (rectangle 50 20 200 "white")))
+
+;; volume draw
+(define volume-dragger
+  (overlay
+   (square 15 "solid" "cyan")
+   (square 20 "solid" "white")
+   ))
+
+(define volume-bar
+  (rectangle 500 20 "solid" "black"))
+
+(define volume-icon (bitmap/file "img/volume-icon.png"))
+
+
+
+;; Draws the scene 
+;; world -> world 
+(define (draw w)
+  (cond
+    [(= (world-scene w) 0)
+     (place-image STRT-BUTTON 600 350
+                  (place-image AWESOME-BUTTON 600 450
+                               (place-image R-LOGO 600 200
+                                            (place-image BACKGROUND-IMG 600 360
+                                                         (empty-scene 1200 720)))))]
+    
+    [(or (= (world-scene w) 1) (= (world-scene w) 3) (= (world-scene w) 4) (= (world-scene w) 5))
+     (place-image
+      (draw-song-slider w)
+      600 550
+      (place-image
+       volume-dragger
+       (world-slide-h w) 650
+       (place-image
+        play-button
+        100 650
+        (place-image
+         pause-button
+         200 650
+         (place-image
+          volume-icon
+          600 650
+          (place-image
+           volume-bar
+           900 650
+           (place-image
+            return-button
+            40 30
+            (place-image 
+             NXT-SNG
+             450 650
+             (place-image
+              PREV-SNG
+              350 650
+              (place-image
+               (tab-draw 1)
+               75 60
+               (place-image
+                (tab-draw 2)
+                125 60
+                (place-image
+                 (tab-draw 3)
+                 175 60
+                 (place-image
+                  (tab-draw 4)
+                  225 60
+                  (place-image
+                   (NOWPLAYING w)
+                   600 500
                    (place-image
-                    volume-dragger
-                    (world-slide-h w) 650
+                    background-visuals
+                    600 360
                     (place-image
-                     play-button
-                     100 650
-                     (place-image
-                      pause-button
-                      200 650
-                      (place-image
-                       volume-icon
-                       600 650
-                       (place-image
-                        volume-bar
-                        900 650
-                        (place-image
-                        return-button
-                        40 30
-                        (place-image
-                         NXT-SNG
-                         450 650
-                         (place-image
-                          PREV-SNG
-                          350 650 
-                          (place-image
-                           (tab-draw 1)
-                           75 60
-                           (place-image
-                            (tab-draw 2)
-                            125 60
-                            (place-image
-                             (tab-draw 3)
-                             175 60
-                             (place-image
-                              (tab-draw 4)
-                              225 60
-                              (place-image
-                               (draw-visuals w)
-                               600 310
-                               (place-image
-                                (NOWPLAYING w)
-                                600 500
-                                (place-image
-                                 background-visuals
-                                 600 360
-                                 (empty-scene 1200 720))))))))))))))))))))))))))))]
+                     (crop 50 70 1100 500
+                     (draw-visuals w (world-scene w)))
+                     600 320
+                     (empty-scene 1200 720)))))))))))))))))
+     ]
+    
+    [(= (world-scene w) 2)
+     (place-image
+      (above
+       (text " E M O S E W A " 34 "red")
+       (text " A W E S O M E " 34 "blue"))
+      600 360
+      (place-image
+       (ellipse 500 150 200 "gray")
+       600 360
+       (place-image
+        return-button
+        40 30
+        (empty-scene 1200 720))))]
     ))  
 
 
@@ -510,11 +380,17 @@
 (define X_BOUNDARY13 150)
 (define X_BOUNDARY14 200)
 
-(define X_BOUNDARY15 200)
+(define X_BOUNDARY15 200) 
 (define X_BOUNDARY16 250)
 ;; y Bounds for tabs are the same
 (define Y_BOUNDARY7 50)
 (define Y_BOUNDARY8 70)
+
+;; volume button bounds
+(define Volume-Icon-X1 575)
+(define Volume-Icon-X2 625)
+(define Volume-Icon-Y1 625)
+(define Volume-Icon-Y2 675)
 
 ;; next and previous button boundaries (next and previous y boundaries are the same)
 (define next-x-l (- 450 25)) ;left
@@ -622,6 +498,13 @@
        [(and (> y Y_BOUNDARY7) (< y Y_BOUNDARY8) (> x X_BOUNDARY15) (< x X_BOUNDARY16) (not (= 0 (world-scene w)))(not (= 5 (world-scene w))))
         (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) 5 (world-p w) (world-cs w)
                     (world-cs-name w)(world-song-drag? w))]
+       ;; Mute
+       [(and (> y Volume-Icon-Y1) (< y Volume-Icon-Y2) (> x Volume-Icon-X1) (< x Volume-Icon-X2)(not (= (world-scene w) 0)))
+           (begin 
+             (set-box! volume-song 0)
+             (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w) (world-scene w) 
+                         (world-p w) (world-cs w)
+                         (world-cs-name w)(world-song-drag? w)))] 
        
        ;;pause
        [(and (> x (- 200 25)) (< x (+ 200 25)) (> y (- 650 25)) (< y (+ 650 25))(not (= (world-scene w) 0)))
@@ -634,7 +517,7 @@
         (begin
           (set-box! play-speed 1);(define-struct world[t a c1now c1go slide-h drag? scene p cs cs-name song-drag?])
           (make-world (world-t w) (world-a w) (world-c1now w) (world-c1go w) (world-slide-h w) (world-drag? w)(world-scene w) 1 (world-cs w)
-                      (world-cs-name w)(world-song-drag? w)))] 
+                      (world-cs-name w)(world-song-drag? w)))]
        [else w])]
     ;; makes drag? false when button is not held down
     [(mouse=? event "button-up")
