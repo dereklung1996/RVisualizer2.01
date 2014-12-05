@@ -9,14 +9,13 @@
 (require racket/base)
 (require racket/async-channel)
 
-;; create new defs here to add songs
 
-(define SONG-LOCATION1 "songs/Derezzed.wav")
-(define SONG-LOCATION2 "songs/The Intro.wav")
-(define SONG-LOCATION3 "songs/rct2theme.wav")
-(define SONG-LOCATION4 "songs/Looking Glass.wav")
-(define SONG-LOCATION5 "songs/Luv Sick.wav")
-
+;; song locations
+(define SONG-LOCATION1 "songs/Derezzed - Daft Punk.wav")
+(define SONG-LOCATION2 "songs/The Intro - The XX.wav")
+(define SONG-LOCATION3 "songs/Rct2 Theme.wav")
+(define SONG-LOCATION4 "songs/Looking Glass - Saturn.wav")
+(define SONG-LOCATION5 "songs/Luv Sick - Saturn.wav")
 
 (define SONG1 (rs-read SONG-LOCATION1))
 (define SONG2 (rs-read SONG-LOCATION2))
@@ -24,14 +23,17 @@
 (define SONG4 (rs-read SONG-LOCATION4))
 (define SONG5 (rs-read SONG-LOCATION5))
 
-
+;; song lengths
 (define SONGLEN1 (rs-frames SONG1))
 (define SONGLEN2 (rs-frames SONG2))
 (define SONGLEN3 (rs-frames SONG3))
 (define SONGLEN4 (rs-frames SONG4))
 (define SONGLEN5 (rs-frames SONG5))
 
+;; list of rsounds to be used in later functions
 (define SONG-LIST  (list SONG1 SONG2 SONG3 SONG4 SONG5))
+
+;; list of rsound names to be used in later functions
 (define SONG-NAME-LIST (list SONG-LOCATION1 SONG-LOCATION2 SONG-LOCATION3 SONG-LOCATION4 SONG-LOCATION5))
 
 ;; a world is (make-world Num Num Num Num X-coord Boolean Num Num Num Rsound String)
@@ -70,7 +72,7 @@
 ;; Create bg for visualizer
 (define background-visuals (bitmap/file "img/bg2-1.png"))
 
-;bounds of buttons on menu screen
+;; bounds of buttons on menu screen
 (define X_BOUNDARY1 500)
 (define X_BOUNDARY2 700)
 (define Y_BOUNDARY1 330)
@@ -96,16 +98,9 @@
 (define X_BOUNDARY15 200) 
 (define X_BOUNDARY16 250)
 (define X_BOUNDARY17 300)
-
 ;; y Bounds for tabs are the same
 (define Y_BOUNDARY7 50)
 (define Y_BOUNDARY8 70)
-
-;; volume button bounds
-(define Volume-Icon-X1 575)
-(define Volume-Icon-X2 625)
-(define Volume-Icon-Y1 625)
-(define Volume-Icon-Y2 675)
 
 ;; next and previous button boundaries (next and previous y boundaries are the same)
 (define next-x-l (- 450 25)) ;left
@@ -115,31 +110,46 @@
 (define y-t (+ 650 10)) ;top
 (define y-b (- 650 10)) ;bottom
 
-
+;; miscellaneous definitions
+;; song volume
 (define volume-song (box 1))
+;; ctr used in network
 (define ctr (box 5))
+;; play-speed
 (define play-speed (box (world-p INITIAL-WORLD)))
+;; current frame
 (define cur-frame (box 1))
+;; current song
 (define cur-song (box (world-cs INITIAL-WORLD)))
+;; current song name
 (define cur-song-name (box (world-cs-name INITIAL-WORLD)))
 (define time-ticks (box 0))
 (define new-frame (box 1))
+;; indicates if the end of the song has been reached
 (define end-song? (box false))
+;; counter used to delay next song (see next-song and prev-song)
 (define next-song-ctr (box 10))
+;; indicates which song change function is to be used when a song-change event occurs
 (define next/prev (box true))
-
 (define CLEMENTS (bitmap/file "img/clements.png"))
 
-;; volume draw
+;; volume elements
 (define volume-dragger
   (overlay
    (square 15 "solid" "cyan")
    (square 20 "solid" "white")))
-
 (define volume-bar
   (rectangle 500 20 "solid" "black"))
-
 (define volume-icon (bitmap/file "img/volume-icon.png"))
+;; volume button bounds
+(define Volume-Icon-X1 575)
+(define Volume-Icon-X2 625)
+(define Volume-Icon-Y1 625)
+(define Volume-Icon-Y2 675)
+
+
+
+
 
 ;; this channel will hold the events flowing from the big-bang side
 (define events (make-async-channel))
@@ -175,6 +185,8 @@
                    (* (unbox volume-song) ; volume
                       (rs-ith/left (unbox cur-song) ctr)))])) 
 
+
+
 ;; Displays what the current song is playing
 (define (NOWPLAYING w)
   (place-image
@@ -183,7 +195,15 @@
      "Now Playing: " (substring (world-cs-name w) 6 (- (string-length (world-cs-name w)) 4))) 
     15 "white")
    150 20
-   (rectangle 300 40 "solid" "orange"))) 
+   (rectangle 300 40 "solid" "orange")))
+
+#;(check-expect (NOWPLAYING INITIAL-WORLD)
+              (place-image
+               (text "Now Playing: Derezzed - Daft Punk" 15 "white")
+               150 20
+               (rectangle 300 40 "solid" "orange")))
+
+
 
 ;; draws the visualizer parts of the scene
 (define (draw-visuals w s)  
@@ -256,15 +276,17 @@
             (place-image
              (circle (* 1.5 (world-c1now w)) "solid" "black")
              (+ 50 (random 1100)) (+ 70 (random 500))
-              (place-image
-               (rectangle 1200 720 "solid" (make-color 
-                                            (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
-                                            (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
-                                            (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
-               600 360
-               (empty-scene 1200 720))))))))])
+             (place-image
+              (rectangle 1200 720 "solid" (make-color 
+                                           (if (> 128 (unbox time-ticks))(+ 40 (unbox time-ticks))(- 295 (unbox time-ticks))) 
+                                           (if (> 128 (unbox time-ticks))(- 128 (unbox time-ticks))(+ (unbox time-ticks) -128))
+                                           (if (> 128 (unbox time-ticks))(+ 100 (unbox time-ticks)) (- 355 (unbox time-ticks)))))
+              600 360
+              (empty-scene 1200 720))))))))])
   ; )
   )
+
+
 
 ;; Creates Song Position Slider
 (define (draw-song-slider w)
@@ -275,6 +297,8 @@
    (* 1000 (/ (+ 1 (unbox cur-frame)) (rs-frames (unbox cur-song)))) 6
    (rectangle 1000 12 "solid" "cyan")))
 
+
+
 ;; tab drawer
 (define (tab-draw num)
   (overlay
@@ -282,34 +306,47 @@
    (rectangle 50 20 "outline" "gray")
    (rectangle 50 20 200 "white")))
 
+#;(check-expect (tab-draw 3)
+              (overlay
+               (text "3" 12 "red")
+               (rectangle 50 20 "outline" "gray")
+               (rectangle 50 20 200 "white")))
+
+
+
 ;; next song selector
-;; current song, song list, name-list -> next song 
+;; both next-song and prev-song are called exclusively in the on-tick function
+;; next-song-ctr is needed to delay the current song from switching before the network ctr has reset
+;; current song, song list, name-list -> next-song, 0
 (define (next-song song-list name-list cs)
-  (if (= (unbox next-song-ctr) 0)
-  (cond
+  (if (= (unbox next-song-ctr) 0) ;; if true, time for current song to change
+  (cond ;; searches list for current song, and sets boxes to corresponding data from the next song
     [(rs-equal? cs (first song-list)) 
      (cond
        [(empty? (rest song-list)) 
         (begin
           (set-box! cur-song (first SONG-LIST))
           (set-box! cur-song-name (first SONG-NAME-LIST))
-          (set-box! end-song? false)
-          (first SONG-LIST))]
+          (set-box! end-song? false))]
        [else
         (begin
           (set-box! cur-song (first (rest song-list)))
           (set-box! cur-song-name (first (rest name-list)))
-          (set-box! end-song? false)
-          (first (rest song-list)))])]    
+          (set-box! end-song? false))])]    
     [else
      (next-song (rest song-list) (rest name-list) cs)])
-  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
+  (begin
+    (set-box! next-song-ctr (sub1 (unbox next-song-ctr))) ;; function is called until next-song-ctr is 0
+    0)))
+
+;(check-expect (next-song SONG-LIST SONG-NAME-LIST SONG1) 0)
 
 ;; previous song selector
-;; current song, song list, name-list -> previous song
+;; current song, song list, name-list -> previous song, 0
+;; operates the same way as next-song
 (define (prev-song song-list name-list cs)
-  (if (= (unbox next-song-ctr) 0)
-  (cond
+  (if (= (unbox next-song-ctr) 0)  
+  (cond  
     [(rs-equal? cs (first (rest song-list)))
      (begin
        (set-box! cur-song (first song-list))
@@ -324,7 +361,12 @@
        (set-box! next-song-ctr 10))]
     [else
      (prev-song (rest song-list) (rest name-list) cs)])
-  (set-box! next-song-ctr (sub1 (unbox next-song-ctr)))))
+  (begin
+    (set-box! next-song-ctr (sub1 (unbox next-song-ctr))) 
+    0)))
+
+;(check-expect (prev-song SONG-LIST SONG-NAME-LIST SONG1) 0)
+
 
 
 ;; Draws the scene 
@@ -454,6 +496,7 @@
                     (empty-scene 1200 720))))))))))))))))]))
 
 
+
 ;; CREATES VISUALS
 ;; world -> world
 ;; on tick, take the sample of a song 
@@ -462,14 +505,14 @@
   (begin
     (if (= (unbox time-ticks) 255)(set-box! time-ticks 0)(set-box! time-ticks (add1 (unbox time-ticks))))
     (if (unbox end-song?)
-        (if (unbox next/prev)
+        (if (unbox next/prev)  ;; if true, next song called.  if false, previous song called.
             (next-song SONG-LIST SONG-NAME-LIST (world-cs w))
             (prev-song SONG-LIST SONG-NAME-LIST (world-cs w)))
         0)
     (if (> (unbox ctr) 0)
         (set-box! ctr (sub1 (unbox ctr)))
         (set-box! ctr 3))
-    (if (<= (- (rs-frames (world-cs w)) 735) (unbox cur-frame))
+    (if (<= (- (rs-frames (world-cs w)) 735) (unbox cur-frame)) ;; end of song, tock function called every 735 frames
         (begin
           (async-channel-put events true)
           (set-box! next/prev true)
@@ -485,6 +528,8 @@
                         (world-slide-h w) (world-drag? w)(world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))
             (make-world (add1 (world-t w)) (world-a w) (abs (/ (+ (world-c1now w) (world-c1go w)) 2)) (world-c1go w)
                         (world-slide-h w) (world-drag? w) (world-scene w)(world-p w) (unbox cur-song) (unbox cur-song-name) (world-song-drag? w))))))
+
+
 
 ;; Mouse Events
 ;; World X-coord Y-coord Mouse-Event -> World 
